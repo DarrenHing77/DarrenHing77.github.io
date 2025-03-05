@@ -26,13 +26,12 @@ document.addEventListener("DOMContentLoaded", function () {
         let x, y, tries = 0;
         do {
             const safeMargin = nodeSize * 1.2;  // Prevents placement too close to edges
-        x = Math.random() * (gallery.clientWidth - safeMargin);
-        y = Math.random() * (gallery.clientHeight - safeMargin);
-
+            x = Math.random() * (gallery.clientWidth - safeMargin);
+            y = Math.random() * (gallery.clientHeight - safeMargin);
             tries++;
-        } while (isOverlapping(x, y) && tries < 100);
+        } while (isOverlapping(x, y) && tries < 300);
         
-        if (tries >= 100) return;
+        if (tries >= 300) return;
         
         const node = document.createElement("div");
         node.classList.add("node");
@@ -54,13 +53,25 @@ document.addEventListener("DOMContentLoaded", function () {
         connections.push({ element: line, nodeA, nodeB });
     }
 
-    images.forEach(img => createNode(img));
+    images.slice(0, numNodes).forEach(img => createNode(img));
 
-    // Ensure all nodes connect in order and prevent far connections
-    nodes.sort((a, b) => a.x - b.x);
-    for (let i = 0; i < nodes.length - 1; i++) {
-        createConnection(nodes[i], nodes[i + 1]);
+    function getClosestNeighbors(node, count = 2) {
+        return nodes
+            .map(otherNode => ({
+                node: otherNode,
+                distance: Math.hypot(otherNode.x - node.x, otherNode.y - node.y)
+            }))
+            .filter(entry => entry.node !== node)  // Remove self from list
+            .sort((a, b) => a.distance - b.distance)  // Sort by closest distance
+            .slice(0, count)  // Pick the closest `count` neighbors
+            .map(entry => entry.node);
     }
+
+    // Ensure all nodes connect to their closest two neighbors
+    nodes.forEach(node => {
+        let closest = getClosestNeighbors(node, 2);  // Connect each node to 2 closest
+        closest.forEach(neighbor => createConnection(node, neighbor));
+    });
 
     function updateConnections() {
         connections.forEach(({ element, nodeA, nodeB }) => {
