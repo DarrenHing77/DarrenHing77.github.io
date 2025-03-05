@@ -25,8 +25,10 @@ document.addEventListener("DOMContentLoaded", function () {
     function createNode(image) {
         let x, y, tries = 0;
         do {
-            x = Math.random() * (gallery.clientWidth - nodeSize);
-            y = Math.random() * (gallery.clientHeight - nodeSize * 1.2);
+            const safeMargin = nodeSize * 1.2;  // Prevents placement too close to edges
+        x = Math.random() * (gallery.clientWidth - safeMargin);
+        y = Math.random() * (gallery.clientHeight - safeMargin);
+
             tries++;
         } while (isOverlapping(x, y) && tries < 100);
         
