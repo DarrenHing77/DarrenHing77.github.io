@@ -63,7 +63,7 @@ body {
 
 .gallery-container {
     width: 65%;
-    height: 700px;
+    height: 90vh;
     position: relative;
     overflow: hidden;
     user-select: none;

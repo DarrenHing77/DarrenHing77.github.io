@@ -26,7 +26,7 @@ document.addEventListener("DOMContentLoaded", function () {
         let x, y, tries = 0;
         do {
             x = Math.random() * (gallery.clientWidth - nodeSize);
-            y = Math.random() * (gallery.clientHeight - nodeSize);
+            y = Math.random() * (gallery.clientHeight - nodeSize * 1.2);
             tries++;
         } while (isOverlapping(x, y) && tries < 100);
         
