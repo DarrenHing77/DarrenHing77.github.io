@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     const gallery = document.getElementById("gallery");
     const nodes = [];
-    const connections = new Set();
+    const connections = new Set(); // Store unique connections
     const nodeSize = 180;
     const spacing = 250;
     const numNodes = 14;
@@ -25,16 +25,15 @@ document.addEventListener("DOMContentLoaded", function () {
     function createNode(image) {
         let x, y, tries = 0;
         do {
-            const safeMargin = nodeSize * 1.2;  // Prevents placement too close to edges
+            const safeMargin = nodeSize * 1.2;
+            const minY = nodeSize * 0.5; // Prevents clipping at the top
             x = Math.random() * (gallery.clientWidth - safeMargin);
-            const minY = nodeSize * 0.5; // Ensures spacing from the top
             y = minY + Math.random() * (gallery.clientHeight - safeMargin - minY);
-
             tries++;
         } while (isOverlapping(x, y) && tries < 300);
-        
+
         if (tries >= 300) return;
-        
+
         const node = document.createElement("div");
         node.classList.add("node");
         node.style.left = `${x}px`;
@@ -46,71 +45,60 @@ document.addEventListener("DOMContentLoaded", function () {
 
         gallery.appendChild(node);
         nodes.push({ element: node, x, y });
+
+        // Add hover effect
+        node.addEventListener("mouseenter", () => {
+            node.style.background = "rgba(0, 140, 255, 0.6)"; // Blue highlight
+            highlightConnections(node, true);
+        });
+        node.addEventListener("mouseleave", () => {
+            node.style.background = "rgba(255, 255, 255, 0.2)"; // Reset
+            highlightConnections(node, false);
+        });
     }
 
     function createConnection(nodeA, nodeB) {
-    const key = [nodeA.element, nodeB.element].sort().join('-');  // Unique key
-    if (connections.has(key)) return;  // Prevent duplicate
+        const key = [nodeA.element, nodeB.element].sort().join('-'); // Unique key
+        if (connections.has(key)) return; // Prevent duplicate
 
-    const line = document.createElement("div");
-    line.classList.add("line");
-    gallery.insertBefore(line, gallery.firstChild);
-    connections.add(key);
+        const line = document.createElement("div");
+        line.classList.add("line");
+        gallery.insertBefore(line, gallery.firstChild);
+        connections.add(key);
 
-    // Store connection elements
-    line.dataset.nodeA = nodeA.element;
-    line.dataset.nodeB = nodeB.element;
-}
-
+        line.dataset.nodeA = nodeA.element;
+        line.dataset.nodeB = nodeB.element;
     }
 
     images.slice(0, numNodes).forEach(img => createNode(img));
 
-function getClosestNeighbors(node, count = 2, maxDistance = 250) {
-    return nodes
-        .map(otherNode => ({
-            node: otherNode,
-            distance: Math.hypot(otherNode.x - node.x, otherNode.y - node.y)
-        }))
-        .filter(entry => entry.node !== node && entry.distance < maxDistance)  // Ignore self & too far nodes
-        .sort((a, b) => a.distance - b.distance)  // Sort by closest
-        .slice(0, count)  // Pick the closest ones
-        .map(entry => entry.node);
-}
-
-// Ensure all nodes connect to their closest two neighbors within range
-nodes.forEach(node => {
-    let closest = getClosestNeighbors(node, 2, 250);  // Max 250px distance
-    if (closest.length === 0 && nodes.length > 1) {
-        closest = getClosestNeighbors(node, 1, 500);  // Emergency fallback to prevent isolation
+    function getClosestNeighbors(node, count = 2, maxDistance = 250) {
+        return nodes
+            .map(otherNode => ({
+                node: otherNode,
+                distance: Math.hypot(otherNode.x - node.x, otherNode.y - node.y)
+            }))
+            .filter(entry => entry.node !== node && entry.distance < maxDistance) // Ignore self & too far nodes
+            .sort((a, b) => a.distance - b.distance)
+            .slice(0, count)
+            .map(entry => entry.node);
     }
-    closest.forEach(neighbor => createConnection(node, neighbor));
-});
 
-
-    // Ensure all nodes connect to their closest two neighbors
     nodes.forEach(node => {
-        let closest = getClosestNeighbors(node, 2);  // Connect each node to 2 closest
+        let closest = getClosestNeighbors(node, 2, 250);
+        if (closest.length === 0 && nodes.length > 1) {
+            closest = getClosestNeighbors(node, 1, 500); // Emergency fallback
+        }
         closest.forEach(neighbor => createConnection(node, neighbor));
     });
 
-    function updateConnections() {
-        connections.forEach(({ element, nodeA, nodeB }) => {
-            const x1 = nodeA.element.offsetLeft + nodeSize / 2;
-            const y1 = nodeA.element.offsetTop + nodeSize / 2;
-            const x2 = nodeB.element.offsetLeft + nodeSize / 2;
-            const y2 = nodeB.element.offsetTop + nodeSize / 2;
-
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const length = Math.sqrt(dx * dx + dy * dy);
-
-            element.style.width = `${length}px`;
-            element.style.left = `${x1}px`;
-            element.style.top = `${y1}px`;
-            element.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+    function highlightConnections(node, isHovering) {
+        connections.forEach((line) => {
+            if (line.dataset.nodeA === node || line.dataset.nodeB === node) {
+                line.style.background = isHovering
+                    ? "linear-gradient(to right, rgba(0,140,255,1), white)"
+                    : "linear-gradient(to right, white, transparent)";
+            }
         });
     }
-
-    updateConnections();
 });
