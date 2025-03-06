@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function () {
     const gallery = document.getElementById("gallery");
     const nodes = [];
-    const connections = [];
+    const connections = new Set();
     const nodeSize = 180;
     const spacing = 250;
     const numNodes = 14;
@@ -49,10 +49,19 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function createConnection(nodeA, nodeB) {
-        const line = document.createElement("div");
-        line.classList.add("line");
-        gallery.insertBefore(line, gallery.firstChild);
-        connections.push({ element: line, nodeA, nodeB });
+    const key = [nodeA.element, nodeB.element].sort().join('-');  // Unique key
+    if (connections.has(key)) return;  // Prevent duplicate
+
+    const line = document.createElement("div");
+    line.classList.add("line");
+    gallery.insertBefore(line, gallery.firstChild);
+    connections.add(key);
+
+    // Store connection elements
+    line.dataset.nodeA = nodeA.element;
+    line.dataset.nodeB = nodeB.element;
+}
+
     }
 
     images.slice(0, numNodes).forEach(img => createNode(img));
