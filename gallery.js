@@ -22,7 +22,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    function createNode(image) {
+    function createNode(image, index) {
         let x, y, tries = 0;
         do {
             const safeMargin = nodeSize * 1.2;
@@ -38,6 +38,7 @@ document.addEventListener("DOMContentLoaded", function () {
         node.classList.add("node");
         node.style.left = `${x}px`;
         node.style.top = `${y}px`;
+        node.setAttribute("id", `node-${index}`); // Unique ID for dataset reference
 
         const img = document.createElement("img");
         img.src = image;
@@ -48,17 +49,17 @@ document.addEventListener("DOMContentLoaded", function () {
 
         // Add hover effect
         node.addEventListener("mouseenter", () => {
-            node.style.background = "rgba(0, 140, 255, 0.6)"; // Blue highlight
+            node.style.borderColor = "rgba(0, 140, 255, 1)"; // Blue outline on hover
             highlightConnections(node, true);
         });
         node.addEventListener("mouseleave", () => {
-            node.style.background = "rgba(255, 255, 255, 0.2)"; // Reset
+            node.style.borderColor = "white"; // Reset to default outline
             highlightConnections(node, false);
         });
     }
 
     function createConnection(nodeA, nodeB) {
-        const key = [nodeA.element, nodeB.element].sort().join('-'); // Unique key
+        const key = [nodeA.element.id, nodeB.element.id].sort().join('-'); // Unique key
         if (connections.has(key)) return; // Prevent duplicate
 
         const line = document.createElement("div");
@@ -66,11 +67,11 @@ document.addEventListener("DOMContentLoaded", function () {
         gallery.insertBefore(line, gallery.firstChild);
         connections.add(key);
 
-        line.dataset.nodeA = nodeA.element;
-        line.dataset.nodeB = nodeB.element;
+        line.dataset.nodeA = nodeA.element.id;
+        line.dataset.nodeB = nodeB.element.id;
     }
 
-    images.slice(0, numNodes).forEach(img => createNode(img));
+    images.slice(0, numNodes).forEach((img, index) => createNode(img, index));
 
     function getClosestNeighbors(node, count = 2, maxDistance = 250) {
         return nodes
@@ -94,7 +95,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function highlightConnections(node, isHovering) {
         connections.forEach((line) => {
-            if (line.dataset.nodeA === node || line.dataset.nodeB === node) {
+            if (line.dataset.nodeA === node.id || line.dataset.nodeB === node.id) {
                 line.style.background = isHovering
                     ? "linear-gradient(to right, rgba(0,140,255,1), white)"
                     : "linear-gradient(to right, white, transparent)";
