@@ -27,7 +27,9 @@ document.addEventListener("DOMContentLoaded", function () {
         do {
             const safeMargin = nodeSize * 1.2;  // Prevents placement too close to edges
             x = Math.random() * (gallery.clientWidth - safeMargin);
-            y = Math.random() * (gallery.clientHeight - safeMargin);
+            const minY = nodeSize * 0.5; // Ensures spacing from the top
+            y = minY + Math.random() * (gallery.clientHeight - safeMargin - minY);
+
             tries++;
         } while (isOverlapping(x, y) && tries < 300);
         
