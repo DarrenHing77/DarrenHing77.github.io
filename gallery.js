@@ -55,17 +55,27 @@ document.addEventListener("DOMContentLoaded", function () {
 
     images.slice(0, numNodes).forEach(img => createNode(img));
 
-    function getClosestNeighbors(node, count = 2) {
-        return nodes
-            .map(otherNode => ({
-                node: otherNode,
-                distance: Math.hypot(otherNode.x - node.x, otherNode.y - node.y)
-            }))
-            .filter(entry => entry.node !== node)  // Remove self from list
-            .sort((a, b) => a.distance - b.distance)  // Sort by closest distance
-            .slice(0, count)  // Pick the closest `count` neighbors
-            .map(entry => entry.node);
+function getClosestNeighbors(node, count = 2, maxDistance = 250) {
+    return nodes
+        .map(otherNode => ({
+            node: otherNode,
+            distance: Math.hypot(otherNode.x - node.x, otherNode.y - node.y)
+        }))
+        .filter(entry => entry.node !== node && entry.distance < maxDistance)  // Ignore self & too far nodes
+        .sort((a, b) => a.distance - b.distance)  // Sort by closest
+        .slice(0, count)  // Pick the closest ones
+        .map(entry => entry.node);
+}
+
+// Ensure all nodes connect to their closest two neighbors within range
+nodes.forEach(node => {
+    let closest = getClosestNeighbors(node, 2, 250);  // Max 250px distance
+    if (closest.length === 0 && nodes.length > 1) {
+        closest = getClosestNeighbors(node, 1, 500);  // Emergency fallback to prevent isolation
     }
+    closest.forEach(neighbor => createConnection(node, neighbor));
+});
+
 
     // Ensure all nodes connect to their closest two neighbors
     nodes.forEach(node => {
