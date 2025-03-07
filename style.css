@@ -71,12 +71,11 @@ body {
 
 .line {
     position: absolute;
-    height: 2px;
-    background: linear-gradient(to right, white, transparent);
-    transform-origin: top left;
-    z-index: 0;
-    transition: background 0.3s ease-in-out;
+    background: red !important; /* Force visibility */
+    height: 5px !important; /* Make thicker for testing */
+    z-index: 9999 !important; /* Bring to front */
 }
+
 
 .node {
     position: absolute;
