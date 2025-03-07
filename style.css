@@ -73,7 +73,7 @@ body {
     position: absolute;
     background: red !important; /* Force visibility */
     height: 5px !important; /* Make thicker for testing */
-    z-index: 9999 !important; /* Bring to front */
+    z-index: 0; /* Connections always behind nodes */
 }
 
 
