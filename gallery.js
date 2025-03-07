@@ -59,7 +59,7 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function createConnection(nodeA, nodeB) {
-        if (!nodeA.element || !nodeB.element) {
+        if (!nodeA || !nodeB || !nodeA.element || !nodeB.element) {
             console.error("Connection Error: One of the nodes is undefined", nodeA, nodeB);
             return;
         }
@@ -77,8 +77,8 @@ document.addEventListener("DOMContentLoaded", function () {
         gallery.insertBefore(line, gallery.firstChild);
         connections.add(key);
 
-        line.dataset.nodeA = nodeA.element.id;
-        line.dataset.nodeB = nodeB.element.id;
+        line.dataset.nodeA = nodeA.element.id || "";
+        line.dataset.nodeB = nodeB.element.id || "";
     }
 
     images.slice(0, numNodes).forEach((img, index) => createNode(img, index));
@@ -109,6 +109,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function highlightConnections(node, isHovering) {
         connections.forEach((line) => {
+            if (!line.dataset.nodeA || !line.dataset.nodeB) {
+                console.error("Skipping invalid connection", line);
+                return;
+            }
+
             if (line.dataset.nodeA === node.id || line.dataset.nodeB === node.id) {
                 line.style.background = isHovering
                     ? "linear-gradient(to right, rgba(0,140,255,1), white)"
