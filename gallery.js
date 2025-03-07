@@ -59,11 +59,21 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function createConnection(nodeA, nodeB) {
+        if (!nodeA.element || !nodeB.element) {
+            console.error("Connection Error: One of the nodes is undefined", nodeA, nodeB);
+            return;
+        }
+
         const key = [nodeA.element.id, nodeB.element.id].sort().join('-'); // Unique key
         if (connections.has(key)) return; // Prevent duplicate
 
         const line = document.createElement("div");
         line.classList.add("line");
+        line.style.position = "absolute";
+        line.style.background = "white";
+        line.style.height = "2px";
+        line.style.zIndex = "0";
+
         gallery.insertBefore(line, gallery.firstChild);
         connections.add(key);
 
@@ -72,6 +82,18 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     images.slice(0, numNodes).forEach((img, index) => createNode(img, index));
+
+    // Ensure all nodes exist before making connections
+    setTimeout(() => {
+        nodes.forEach(node => {
+            let closest = getClosestNeighbors(node, 2, 250);
+            if (closest.length === 0 && nodes.length > 1) {
+                closest = getClosestNeighbors(node, 1, 500); // Emergency fallback
+            }
+            closest.forEach(neighbor => createConnection(node, neighbor));
+        });
+        console.log("Connections successfully created:", connections.size);
+    }, 100);
 
     function getClosestNeighbors(node, count = 2, maxDistance = 250) {
         return nodes
@@ -84,14 +106,6 @@ document.addEventListener("DOMContentLoaded", function () {
             .slice(0, count)
             .map(entry => entry.node);
     }
-
-    nodes.forEach(node => {
-        let closest = getClosestNeighbors(node, 2, 250);
-        if (closest.length === 0 && nodes.length > 1) {
-            closest = getClosestNeighbors(node, 1, 500); // Emergency fallback
-        }
-        closest.forEach(neighbor => createConnection(node, neighbor));
-    });
 
     function highlightConnections(node, isHovering) {
         connections.forEach((line) => {
