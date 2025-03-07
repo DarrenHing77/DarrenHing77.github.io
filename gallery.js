@@ -1,10 +1,11 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const gallery = document.getElementById("gallery");
     const nodes = [];
     const connections = [];
-    const nodeSize = 180;
-    const spacing = 250; // Slightly increased to prevent overlap completely
+    const nodeSize = 140; // reduced size for better spacing
+    const spacing = 200;  // prevents overlaps
     const numNodes = 12;
+    const padding = 20;   // prevents clipping at edges
 
     const images = [
         "media/orcKing01.jpg", "media/P_Rick01.jpg", "media/The-Smeds-and-the-Smoos.jpeg", "media/zog01.jpg",
@@ -14,31 +15,38 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const savedPositions = JSON.parse(localStorage.getItem('fixedNodePositions') || '{}');
 
+    function clearPositions() {
+        localStorage.removeItem('fixedNodePositions');
+    }
+    // clearPositions();  // Run this line once in console to regenerate positions if needed
+
     function isOverlapping(x, y) {
         return nodes.some(node => Math.hypot(node.x - x, node.y - y) < spacing);
     }
 
-    for (let i = 0; i < numNodes; i++) {
-        let x, y, tries = 0;
-        if (savedPositions[`node-${i}`]) {
-            ({ x, y } = savedPositions[`node-${i}`]);
+    function createNode(image, index) {
+        const positions = JSON.parse(localStorage.getItem('fixedNodePositions') || '{}');
+        let x, y, attempts = 0;
+
+        if (positions[`node-${index}`]) {
+            ({ x, y } = positions[`node-${index}`]);
         } else {
             do {
-                x = Math.random() * (gallery.clientWidth - nodeSize);
+                x = Math.random() * (gallery.clientWidth - nodeSize - 20) + 10;
                 y = Math.random() * (gallery.clientHeight - nodeSize);
-                tries++;
-            } while (isOverlapping(x, y) && tries < 1000);
+                attempts++;
+            } while (isOverlapping(x, y) && attempts < 1000);
 
-            savedPositions[`node-${i}`] = { x, y };
+            positions[`node-${index}`] = { x, y };
+            localStorage.setItem('fixedNodePositions', JSON.stringify(positions));
         }
 
         const node = document.createElement("div");
         node.className = "node";
         node.style.left = `${x}px`;
         node.style.top = `${y}px`;
-        node.id = `node-${i}`;
-        node.innerHTML = `<img src="${images[i]}">`;
-
+        node.innerHTML = `<img src="${image}">`;
+        
         node.onmouseenter = () => highlight(node, true);
         node.onmouseleave = () => highlight(node, false);
 
@@ -46,55 +54,54 @@ document.addEventListener("DOMContentLoaded", function() {
         nodes.push({ element: node, x, y });
     }
 
-    localStorage.setItem('fixedNodePositions', JSON.stringify(savedPositions));
+    function createConnections() {
+        nodes.forEach(node => {
+            const neighbors = nodes.filter(n => n !== node)
+                .map(n => ({ node: n, dist: Math.hypot(node.x - n.x, node.y - n.y) }))
+                .sort((a, b) => a.dist - b.dist)
+                .slice(0, 2);
 
-    // Create connections
-    nodes.forEach(node => {
-        const neighbors = nodes
-            .filter(n => n !== node)
-            .map(n => ({node: n, dist: Math.hypot(node.x - n.x, node.y - n.y)}))
-            .sort((a, b) => a.dist - b.dist)
-            .slice(0, 2);
-
-        neighbors.forEach(n => {
-            if (!connections.some(c =>
-                (c.nodeA === node && c.nodeB === n.node) ||
-                (c.nodeA === n.node && c.nodeB === node)
-            )) {
-                const line = document.createElement("div");
-                line.className = "line";
-                gallery.insertBefore(line, gallery.firstChild);
-                connections.push({element: line, nodeA: node, nodeB: n.node});
-                updateLine(line, node, n.node);
-            }
+            neighbors.forEach(({ node: neighbor }) => {
+                if (!connections.some(c =>
+                    (c.nodeA === node && c.nodeB === neighbor) ||
+                    (c.nodeA === neighbor && c.nodeB === node))) {
+                    const line = document.createElement("div");
+                    line.className = "line";
+                    gallery.insertBefore(line, gallery.firstChild);
+                    updateLine(line, node, neighbor);
+                    connections.push({ element: line, nodeA: node, nodeB: neighbor });
+                }
+            });
         });
-    });
+    }
 
     function updateLine(line, nodeA, nodeB) {
-        const x1 = nodeA.x + nodeSize/2, y1 = nodeA.y + nodeSize/2;
-        const x2 = nodeB.x + nodeSize/2, y2 = nodeB.y + nodeSize/2;
+        const x1 = nodeA.x + nodeSize / 2, y1 = nodeA.y + nodeSize / 2;
+        const x2 = nodeB.x + nodeSize / 2, y2 = nodeB.y + nodeSize / 2;
         const dx = x2 - x1, dy = y2 - y1;
         line.style.width = `${Math.hypot(dx, dy)}px`;
         line.style.left = `${x1}px`;
         line.style.top = `${y1}px`;
         line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
-        line.style.background = "rgba(255,255,255,0.3)";
         line.style.height = "2px";
         line.style.position = "absolute";
+        line.style.background = "rgba(255,255,255,0.3)";
         line.style.transformOrigin = "0 0";
-        line.style.zIndex = "0";  // Connections behind nodes
+        connections.push({ element: line, nodeA: node, nodeB: neighbor });
     }
 
-    // Highlight connections on hover with gradient effect
     function highlight(node, hover) {
         node.style.borderColor = hover ? "#008CFF" : "white";
         connections.forEach(({ element, nodeA, nodeB }) => {
             if (nodeA.element === node || nodeB.element === node) {
-                const gradientDir = nodeA.element === node ? 'to right' : 'to left';
                 element.style.background = hover
-                    ? `linear-gradient(${gradientDir}, #008CFF, rgba(255,255,255,0.2))`
+                    ? "linear-gradient(to right, #008CFF, rgba(255,255,255,0.3))"
                     : "rgba(255,255,255,0.3)";
             }
         });
     }
+
+    // Initialize Nodes & Connections
+    for (let i = 0; i < numNodes; i++) createNode(images[i], i);
+    createConnections();
 });
