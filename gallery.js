@@ -1,9 +1,105 @@
-document.addEventListener("DOMContentLoaded", function () {
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Darren Hing Design</title>
+    <style>
+        body {
+            background-color: black;
+            color: #0078A0; /* Original text color from Wix site */
+            margin: 0;
+            font-family: Arial, sans-serif;
+            overflow: hidden;
+        }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px;
+            background: black;
+            position: fixed;
+            width: 100%;
+            box-sizing: border-box;
+            z-index: 100;
+        }
+        .menu a {
+            color: #0078A0;
+            text-decoration: none;
+            font-size: 18px;
+            margin-right: 20px;
+        }
+        .container {
+            display: flex;
+            padding-top: 80px; /* Height of header */
+            height: calc(100vh - 80px);
+            box-sizing: border-box;
+        }
+        .bio {
+            width: 30%;
+            padding: 20px;
+            color: #0078A0;
+        }
+        .gallery-container {
+            flex-grow: 1;
+            position: relative;
+            overflow: hidden;
+        }
+        .node {
+            position: absolute;
+            width: 180px;
+            height: 180px;
+            border-radius: 50%;
+            border: 2px solid white;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.3s ease, border-color 0.3s ease;
+            background-color: rgba(255,255,255,0.1);
+            z-index: 2;
+        }
+        .node img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        .line {
+            position: absolute;
+            background-color: rgba(255,255,255,0.5);
+            height: 2px;
+            transform-origin: 0 0;
+            z-index: 0;
+        }
+    </style>
+</head>
+
+<body>
+<div class="header">
+    <h1>Darren Hing Design</h1>
+    <nav>
+        <a href="#">Home</a>
+        <a href="#">Portfolio ▼</a>
+        <a href="#">Blog</a>
+        <a href="#">Contact</a>
+    </nav>
+</div>
+
+<div class="container">
+    <div class="bio">
+        <h2 style="color:#F8A332;">Lookdev Artist<br>Lighting Artist<br>Illustrator</h2>
+        <p style="color:#0078A0;">
+            Hey there! I'm Darren Hing—artist, toolmaker, and professional button masher. By day, I wrangle nodes and shaders...
+            Check out my reels <a href="#" style="color:orange;">here</a>.
+        </p>
+    </div>
+
+    <div id="gallery" style="width:70%; position:relative;"></div>
+</div>
+
+<script>
+document.addEventListener("DOMContentLoaded", function() {
     const gallery = document.getElementById("gallery");
     const nodes = [];
-    const connections = [];
     const nodeSize = 180;
-    const spacing = 280; // increased to prevent overlap
+    const spacing = 220;
     const numNodes = 12;
 
     const images = [
@@ -12,117 +108,69 @@ document.addEventListener("DOMContentLoaded", function () {
         "media/your-image9.jpg", "media/your-image10.jpg", "media/your-image11.jpg", "media/your-image12.jpg"
     ];
 
-    function clearPositions() {
-        localStorage.removeItem('fixedNodePositions');
-    }
-    // Uncomment below once, then reload to reset positions
-    // clearPositions();
+    const savedPositions = JSON.parse(localStorage.getItem('fixedNodePositions') || '{}');
 
     function isOverlapping(x, y) {
-        return nodes.some(node => {
-            const dx = node.x - x;
-            const dy = node.y - y;
-            return Math.hypot(dx, dy) < spacing;
-        });
+        return nodes.some(node => Math.hypot(node.x - x, node.y - y) < spacing);
     }
 
-    function createNode(image, index) {
-        const positions = JSON.parse(localStorage.getItem('fixedNodePositions') || '{}');
-        const maxTries = 1000;
-        let tries = 0, x, y;
-
-        if (positions[`node-${index}`]) {
-            ({ x, y } = positions[`node-${index}`]);
+    for (let i = 0; i < numNodes; i++) {
+        let x, y, tries = 0;
+        if (savedPositions[`node-${i}`]) {
+            ({ x, y } = savedPositions[`node-${i}`]);
         } else {
             do {
                 x = Math.random() * (gallery.clientWidth - nodeSize);
                 y = Math.random() * (gallery.clientHeight - nodeSize);
-                tries++;
-            } while (isOverlapping(x, y) && tries < maxTries);
+            } while (isOverlapping(x, y));
 
-            positions[`node-${index}`] = { x, y };
-            localStorage.setItem('fixedNodePositions', JSON.stringify(positions));
+            savedPositions[`node-${i}`] = { x, y };
         }
 
         const node = document.createElement("div");
         node.className = "node";
-        node.id = `node-${index}`;
         node.style.left = `${x}px`;
         node.style.top = `${y}px`;
+        node.id = `node-${i}`;
+        node.innerHTML = `<img src="${images[i]}">`;
 
-        const img = document.createElement("img");
-        img.src = image;
-        node.appendChild(img);
+        node.onmouseenter = () => node.style.borderColor = "#008CFF";
+        node.onmouseleave = () => node.style.borderColor = "white";
+
         gallery.appendChild(node);
-
         nodes.push({ element: node, x, y });
-
-        node.addEventListener("mouseenter", () => highlight(node, true));
-        node.addEventListener("mouseleave", () => highlight(node, false));
     }
 
-    function createConnections() {
+    localStorage.setItem('fixedNodePositions', JSON.stringify(savedPositions));
+
+    // Connections
+    function connectNodes() {
         nodes.forEach(node => {
-            getNeighbors(node, 2, 350).forEach(neighbor => createConnection(node, neighbor));
-        });
-        updateConnections();
-    }
+            const neighbors = nodes
+                .filter(n => n !== node)
+                .map(n => ({node: n, dist: Math.hypot(node.x - n.x, node.y - n.y)}))
+                .sort((a, b) => a.dist - b.dist)
+                .slice(0, 2);
 
-    function getNeighbors(node, count, maxDist) {
-        return nodes.filter(n => n !== node)
-            .map(n => ({ node: n, dist: Math.hypot(n.x - node.x, n.y - node.y) }))
-            .filter(n => n.dist < maxDist)
-            .sort((a, b) => a.dist - b.dist)
-            .slice(0, count)
-            .map(n => n.node);
-    }
-
-    function createConnection(nodeA, nodeB) {
-        if (connections.some(c =>
-            (c.nodeA === nodeA && c.nodeB === nodeB) || 
-            (c.nodeA === nodeB && c.nodeB === nodeA))) return;
-
-        const line = document.createElement("div");
-        line.className = "line";
-        gallery.insertBefore(line, gallery.firstChild);
-        connections.push({ element: line, nodeA, nodeB });
-    }
-
-    function updateConnections() {
-        connections.forEach(({ element, nodeA, nodeB }) => {
-            const x1 = nodeA.x + nodeSize / 2;
-            const y1 = nodeA.y + nodeSize / 2;
-            const x2 = nodeB.x + nodeSize / 2;
-            const y2 = nodeB.y + nodeSize / 2;
-
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const length = Math.hypot(dx, dy);
-
-            element.style.width = `${length}px`;
-            element.style.left = `${x1}px`;
-            element.style.top = `${y1}px`;
-            element.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
-            element.style.background = "rgba(255,255,255,0.5)";
-            element.style.height = "2px";
-            element.style.position = "absolute";
-            element.style.transformOrigin = "0 0";
-            element.style.zIndex = "0";
+            neighbors.forEach(n => {
+                const line = document.createElement("div");
+                line.className = "line";
+                gallery.insertBefore(line, gallery.firstChild);
+                updateLine(line, node, n.node);
+            });
         });
     }
 
-    function highlight(node, hover) {
-        node.style.borderColor = hover ? "rgba(0,140,255,1)" : "white";
-        connections.forEach(({ element, nodeA, nodeB }) => {
-            if (nodeA.element === node || nodeB.element === node) {
-                element.style.background = hover
-                    ? "linear-gradient(to right, rgba(0,140,255,1), white)"
-                    : "rgba(255,255,255,0.5)";
-            }
-        });
+    function updateLine(line, nodeA, nodeB) {
+        const x1 = nodeA.x + nodeSize/2, y1 = nodeA.y + nodeSize/2;
+        const x2 = nodeB.x + nodeSize / 2, y2 = nodeB.y + nodeSize/2;
+        const dx = x2 - x1, dy = y2 - y1;
+        line.style.width = `${Math.hypot(dx, dy)}px`;
+        line.style.left = `${x1}px`;
+        line.style.top = `${y1}px`;
+        line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+        line.style.background = "rgba(255,255,255,0.5)";
     }
 
-    // Initialize Nodes & Connections
-    for (let i = 0; i < numNodes; i++) createNode(images[i], i);
-    createConnections();
+    connectNodes();
 });
