@@ -71,4 +71,69 @@ document.addEventListener("DOMContentLoaded", function () {
         line.classList.add("line");
         line.style.position = "absolute";
         line.style.background = "white";
-        line.style.height = "2px
+        line.style.height = "2px";
+        line.style.zIndex = "0";
+
+        gallery.insertBefore(line, gallery.firstChild);
+        connections.add(key);
+
+        line.dataset.nodeA = nodeA.element.id || "";
+        line.dataset.nodeB = nodeB.element.id || "";
+        console.log(`Creating connection: ${nodeA.element.id} ↔ ${nodeB.element.id}`);
+    }
+
+    images.slice(0, numNodes).forEach((img, index) => createNode(img, index));
+
+    // Ensure all nodes exist before making connections
+    setTimeout(() => {
+        if (nodes.length < 2) {
+            console.warn("Not enough nodes to create connections.");
+            return;
+        }
+
+        nodes.forEach(node => {
+            let closest = getClosestNeighbors(node, 2, 250);
+            if (closest.length === 0 && nodes.length > 1) {
+                closest = getClosestNeighbors(node, 1, 500); // Emergency fallback
+            }
+            closest.forEach(neighbor => createConnection(node, neighbor));
+        });
+
+        console.log("Connections successfully created:", connections.size);
+    }, 100);
+
+    function getClosestNeighbors(node, count = 2, maxDistance = 250) {
+        return nodes
+            .map(otherNode => ({
+                node: otherNode,
+                distance: Math.hypot(otherNode.x - node.x, otherNode.y - node.y)
+            }))
+            .filter(entry => entry.node !== node && entry.distance < maxDistance) // Ignore self & too far nodes
+            .sort((a, b) => a.distance - b.distance)
+            .slice(0, count)
+            .map(entry => entry.node);
+    }
+
+    function highlightConnections(node, isHovering) {
+        connections.forEach((line) => {
+            if (!line.dataset.nodeA || !line.dataset.nodeB) {
+                console.warn("Skipping invalid connection", line);
+                return;
+            }
+
+            const nodeA = document.getElementById(line.dataset.nodeA);
+            const nodeB = document.getElementById(line.dataset.nodeB);
+
+            if (!nodeA || !nodeB) {
+                console.warn("Skipping connection due to missing nodes", line.dataset.nodeA, line.dataset.nodeB);
+                return;
+            }
+
+            if (line.dataset.nodeA === node.id || line.dataset.nodeB === node.id) {
+                line.style.background = isHovering
+                    ? "linear-gradient(to right, rgba(0,140,255,1), white)"
+                    : "linear-gradient(to right, white, transparent)";
+            }
+        });
+    }
+});
