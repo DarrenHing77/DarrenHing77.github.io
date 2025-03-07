@@ -62,32 +62,34 @@ body {
 }
 
 .gallery-container {
-    width: 65%;
-    height: 90vh;
-    position: relative;
+    position: absolute;
+    top: 80px; /* Below header */
+    right: 0;
+    bottom: 0;
+    left: 30%; /* Leaves room for bio */
     overflow: hidden;
-    user-select: none;
+    padding: 10px;
+    box-sizing: border-box;
+}
+
+.node {
+    z-index: 2;
+    position: absolute;
+    overflow: hidden;
+}
+
+.node:hover {
+    border-color: #008CFF;
+    transform: scale(1.2);
 }
 
 .line {
     position: absolute;
-    background: red !important; /* Force visibility */
-    height: 5px !important; /* Make thicker for testing */
-    z-index: 0; /* Connections always behind nodes */
+    height: 2px;
+    background: rgba(255,255,255,0.3);
+    z-index: 0; /* behind circles */
 }
 
-
-.node {
-    position: absolute;
-    width: 180px;
-    height: 180px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid white;
-    border-radius: 50%;
-    transition: transform 0.3s ease, background 0.3s ease;
-    cursor: pointer;
-    z-index: 2;
-}
 
 .node:hover {
     transform: scale(1.3);
