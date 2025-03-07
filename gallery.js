@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const nodes = [];
     const connections = [];
     const nodeSize = 180;
-    const spacing = 220;
+    const spacing = 280; // increased to prevent overlap
     const numNodes = 12;
 
     const images = [
@@ -12,25 +12,36 @@ document.addEventListener("DOMContentLoaded", function () {
         "media/your-image9.jpg", "media/your-image10.jpg", "media/your-image11.jpg", "media/your-image12.jpg"
     ];
 
+    function clearPositions() {
+        localStorage.removeItem('fixedNodePositions');
+    }
+    // Uncomment below once, then reload to reset positions
+    // clearPositions();
+
     function isOverlapping(x, y) {
-        return nodes.some(n => Math.hypot(n.x - x, n.y - y) < spacing);
+        return nodes.some(node => {
+            const dx = node.x - x;
+            const dy = node.y - y;
+            return Math.hypot(dx, dy) < spacing;
+        });
     }
 
     function createNode(image, index) {
-        const savedPositions = JSON.parse(localStorage.getItem('fixedNodePositions') || '{}');
-        let x, y, tries = 0;
+        const positions = JSON.parse(localStorage.getItem('fixedNodePositions') || '{}');
+        const maxTries = 1000;
+        let tries = 0, x, y;
 
-        if (savedPositions[`node-${index}`]) {
-            ({ x, y } = savedPositions[`node-${index}`]);
+        if (positions[`node-${index}`]) {
+            ({ x, y } = positions[`node-${index}`]);
         } else {
             do {
                 x = Math.random() * (gallery.clientWidth - nodeSize);
                 y = Math.random() * (gallery.clientHeight - nodeSize);
                 tries++;
-            } while (isOverlapping(x, y) && tries < 500);
+            } while (isOverlapping(x, y) && tries < maxTries);
 
-            savedPositions[`node-${index}`] = { x, y };
-            localStorage.setItem('fixedNodePositions', JSON.stringify(savedPositions));
+            positions[`node-${index}`] = { x, y };
+            localStorage.setItem('fixedNodePositions', JSON.stringify(positions));
         }
 
         const node = document.createElement("div");
@@ -44,16 +55,15 @@ document.addEventListener("DOMContentLoaded", function () {
         node.appendChild(img);
         gallery.appendChild(node);
 
+        nodes.push({ element: node, x, y });
+
         node.addEventListener("mouseenter", () => highlight(node, true));
         node.addEventListener("mouseleave", () => highlight(node, false));
-
-        nodes.push({ element: node, x, y });
     }
 
-    function connectNodes() {
-        nodes.forEach((node) => {
-            let neighbors = getNeighbors(node, 2, 300);
-            neighbors.forEach(neighbor => createConnection(node, neighbor));
+    function createConnections() {
+        nodes.forEach(node => {
+            getNeighbors(node, 2, 350).forEach(neighbor => createConnection(node, neighbor));
         });
         updateConnections();
     }
@@ -68,16 +78,13 @@ document.addEventListener("DOMContentLoaded", function () {
     }
 
     function createConnection(nodeA, nodeB) {
-        const existing = connections.some(c =>
+        if (connections.some(c =>
             (c.nodeA === nodeA && c.nodeB === nodeB) || 
-            (c.nodeA === nodeB && c.nodeB === nodeA)
-        );
-        if (existing) return;
+            (c.nodeA === nodeB && c.nodeB === nodeA))) return;
 
         const line = document.createElement("div");
         line.className = "line";
         gallery.insertBefore(line, gallery.firstChild);
-
         connections.push({ element: line, nodeA, nodeB });
     }
 
@@ -99,6 +106,7 @@ document.addEventListener("DOMContentLoaded", function () {
             element.style.background = "rgba(255,255,255,0.5)";
             element.style.height = "2px";
             element.style.position = "absolute";
+            element.style.transformOrigin = "0 0";
             element.style.zIndex = "0";
         });
     }
@@ -114,12 +122,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // Clear old positions if you want new layout (uncomment if needed)
-    // localStorage.removeItem('fixedNodePositions');
-
-    for (let i = 0; i < numNodes; i++) {
-        createNode(images[i % images.length], i);
-    }
-
-    connectNodes();
+    // Initialize Nodes & Connections
+    for (let i = 0; i < numNodes; i++) createNode(images[i], i);
+    createConnections();
 });
