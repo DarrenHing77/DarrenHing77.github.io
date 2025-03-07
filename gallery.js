@@ -5,6 +5,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const nodeSize = 180;
     const spacing = 250;
     const numNodes = 14;
+    const seed = 12345; // Change this number to shuffle the arrangement
 
     const images = [
         "media/orcKing01.jpg", "media/P_Rick01.jpg", "media/The-Smeds-and-the-Smoos.jpeg", "media/zog01.jpg",
@@ -13,26 +14,17 @@ document.addEventListener("DOMContentLoaded", function () {
         "media/your-image13.jpg", "media/your-image14.jpg"
     ];
 
-    function isOverlapping(newX, newY) {
-        return nodes.some(node => {
-            const dx = node.x - newX;
-            const dy = node.y - newY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            return distance < spacing;
-        });
+    function seededRandom(seed) {
+        let x = Math.sin(seed) * 10000;
+        return x - Math.floor(x);
     }
 
     function createNode(image, index) {
-        let x, y, tries = 0;
-        do {
-            const safeMargin = nodeSize * 1.2;
-            const minY = nodeSize * 0.5; // Prevents clipping at the top
-            x = Math.random() * (gallery.clientWidth - safeMargin);
-            y = minY + Math.random() * (gallery.clientHeight - safeMargin - minY);
-            tries++;
-        } while (isOverlapping(x, y) && tries < 300);
+        const safeMargin = nodeSize * 1.2;
+        const minY = nodeSize * 0.5; // Prevents clipping at the top
 
-        if (tries >= 300) return;
+        let x = seededRandom(index + seed) * (gallery.clientWidth - safeMargin);
+        let y = minY + seededRandom(index + seed * 2) * (gallery.clientHeight - safeMargin - minY);
 
         const node = document.createElement("div");
         node.classList.add("node");
@@ -70,9 +62,9 @@ document.addEventListener("DOMContentLoaded", function () {
         const line = document.createElement("div");
         line.classList.add("line");
         line.style.position = "absolute";
-        line.style.background = "white";
-        line.style.height = "2px";
-        line.style.zIndex = "0";
+        line.style.background = "red"; // DEBUG: Set to red for visibility
+        line.style.height = "5px"; // DEBUG: Make thicker
+        line.style.zIndex = "9999"; // DEBUG: Ensure it is above elements
 
         gallery.insertBefore(line, gallery.firstChild);
         connections.add(key);
@@ -84,7 +76,6 @@ document.addEventListener("DOMContentLoaded", function () {
 
     images.slice(0, numNodes).forEach((img, index) => createNode(img, index));
 
-    // Ensure all nodes exist before making connections
     setTimeout(() => {
         if (nodes.length < 2) {
             console.warn("Not enough nodes to create connections.");
@@ -100,6 +91,7 @@ document.addEventListener("DOMContentLoaded", function () {
         });
 
         console.log("Connections successfully created:", connections.size);
+        updateConnections();
     }, 100);
 
     function getClosestNeighbors(node, count = 2, maxDistance = 250) {
@@ -108,10 +100,44 @@ document.addEventListener("DOMContentLoaded", function () {
                 node: otherNode,
                 distance: Math.hypot(otherNode.x - node.x, otherNode.y - node.y)
             }))
-            .filter(entry => entry.node !== node && entry.distance < maxDistance) // Ignore self & too far nodes
+            .filter(entry => entry.node !== node && entry.distance < maxDistance)
             .sort((a, b) => a.distance - b.distance)
             .slice(0, count)
             .map(entry => entry.node);
+    }
+
+    function updateConnections() {
+        connections.forEach((line) => {
+            if (!line.dataset.nodeA || !line.dataset.nodeB) {
+                console.warn("Skipping invalid connection", line);
+                return;
+            }
+
+            const nodeA = document.getElementById(line.dataset.nodeA);
+            const nodeB = document.getElementById(line.dataset.nodeB);
+
+            if (!nodeA || !nodeB) {
+                console.warn("Skipping connection due to missing nodes", line.dataset.nodeA, line.dataset.nodeB);
+                return;
+            }
+
+            const x1 = nodeA.offsetLeft + nodeSize / 2;
+            const y1 = nodeA.offsetTop + nodeSize / 2;
+            const x2 = nodeB.offsetLeft + nodeSize / 2;
+            const y2 = nodeB.offsetTop + nodeSize / 2;
+
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const length = Math.sqrt(dx * dx + dy * dy);
+
+            console.log(`Line from (${x1}, ${y1}) to (${x2}, ${y2}) - Width: ${length}px`);
+
+            line.style.width = `${length}px`;
+            line.style.left = `${x1}px`;
+            line.style.top = `${y1}px`;
+            line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+            line.style.border = "1px solid yellow"; // DEBUG: Outline for visibility
+        });
     }
 
     function highlightConnections(node, isHovering) {
