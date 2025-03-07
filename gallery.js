@@ -1,11 +1,10 @@
 document.addEventListener("DOMContentLoaded", function () {
     const gallery = document.getElementById("gallery");
     const nodes = [];
-    const connections = new Set(); // Store unique connections
+    const connections = new Set();
     const nodeSize = 180;
     const spacing = 250;
     const numNodes = 14;
-    const seed = 12345; // Change this number to shuffle the arrangement
 
     const images = [
         "media/orcKing01.jpg", "media/P_Rick01.jpg", "media/The-Smeds-and-the-Smoos.jpeg", "media/zog01.jpg",
@@ -14,23 +13,42 @@ document.addEventListener("DOMContentLoaded", function () {
         "media/your-image13.jpg", "media/your-image14.jpg"
     ];
 
-    function seededRandom(seed) {
-        let x = Math.sin(seed) * 10000;
-        return x - Math.floor(x);
+    function isOverlapping(newX, newY) {
+        return nodes.some(node => {
+            const dx = node.x - newX;
+            const dy = node.y - newY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < spacing;
+        });
     }
 
     function createNode(image, index) {
         const safeMargin = nodeSize * 1.2;
-        const minY = nodeSize * 0.5; // Prevents clipping at the top
+        const minY = nodeSize * 0.5;
 
-        let x = seededRandom(index + seed) * (gallery.clientWidth - safeMargin);
-        let y = minY + seededRandom(index + seed * 2) * (gallery.clientHeight - safeMargin - minY);
+        // Load positions from localStorage or generate new ones
+        let savedPositions = JSON.parse(localStorage.getItem("nodePositions")) || {};
+        let x, y;
+
+        if (savedPositions[`node-${index}`]) {
+            ({ x, y } = savedPositions[`node-${index}`]); // Use saved positions
+        } else {
+            let tries = 0;
+            do {
+                x = Math.random() * (gallery.clientWidth - safeMargin);
+                y = minY + Math.random() * (gallery.clientHeight - safeMargin - minY);
+                tries++;
+            } while (isOverlapping(x, y) && tries < 300);
+
+            savedPositions[`node-${index}`] = { x, y };
+            localStorage.setItem("nodePositions", JSON.stringify(savedPositions));
+        }
 
         const node = document.createElement("div");
         node.classList.add("node");
         node.style.left = `${x}px`;
         node.style.top = `${y}px`;
-        node.setAttribute("id", `node-${index}`); // Unique ID for dataset reference
+        node.setAttribute("id", `node-${index}`);
 
         const img = document.createElement("img");
         img.src = image;
@@ -39,42 +57,43 @@ document.addEventListener("DOMContentLoaded", function () {
         gallery.appendChild(node);
         nodes.push({ element: node, x, y });
 
-        // Add hover effect
         node.addEventListener("mouseenter", () => {
-            node.style.borderColor = "rgba(0, 140, 255, 1)"; // Blue outline on hover
+            node.style.borderColor = "rgba(0, 140, 255, 1)";
             highlightConnections(node, true);
         });
         node.addEventListener("mouseleave", () => {
-            node.style.borderColor = "white"; // Reset to default outline
+            node.style.borderColor = "white";
             highlightConnections(node, false);
         });
     }
 
     function createConnection(nodeA, nodeB) {
         if (!nodeA || !nodeB || !nodeA.element || !nodeB.element) {
-            console.error("Connection Error: One of the nodes is undefined", nodeA, nodeB);
+            console.error("Connection Error: Undefined nodes", nodeA, nodeB);
             return;
         }
 
-        const key = [nodeA.element.id, nodeB.element.id].sort().join('-'); // Unique key
-        if (connections.has(key)) return; // Prevent duplicate
+        const key = [nodeA.element.id, nodeB.element.id].sort().join('-');
+        if (connections.has(key)) return;
 
         const line = document.createElement("div");
         line.classList.add("line");
         line.style.position = "absolute";
-        line.style.background = "red"; // DEBUG: Set to red for visibility
-        line.style.height = "5px"; // DEBUG: Make thicker
-        line.style.zIndex = "9999"; // DEBUG: Ensure it is above elements
+        line.style.background = "rgba(255,255,255,0.5)";
+        line.style.height = "2px";
+        line.style.zIndex = "0";
 
         gallery.insertBefore(line, gallery.firstChild);
-        connections.add(key);
+        connections.add(line);
 
-        line.dataset.nodeA = nodeA.element.id || "";
-        line.dataset.nodeB = nodeB.element.id || "";
-        console.log(`Creating connection: ${nodeA.element.id} ↔ ${nodeB.element.id}`);
+        line.dataset.nodeA = nodeA.element.id;
+        line.dataset.nodeB = nodeB.element.id;
     }
 
-    images.slice(0, numNodes).forEach((img, index) => createNode(img, index));
+    // Create all 14 nodes
+    for (let i = 0; i < numNodes; i++) {
+        createNode(images[i % images.length], i);
+    }
 
     setTimeout(() => {
         if (nodes.length < 2) {
@@ -85,12 +104,11 @@ document.addEventListener("DOMContentLoaded", function () {
         nodes.forEach(node => {
             let closest = getClosestNeighbors(node, 2, 250);
             if (closest.length === 0 && nodes.length > 1) {
-                closest = getClosestNeighbors(node, 1, 500); // Emergency fallback
+                closest = getClosestNeighbors(node, 1, 500);
             }
             closest.forEach(neighbor => createConnection(node, neighbor));
         });
 
-        console.log("Connections successfully created:", connections.size);
         updateConnections();
     }, 100);
 
@@ -108,16 +126,11 @@ document.addEventListener("DOMContentLoaded", function () {
 
     function updateConnections() {
         connections.forEach((line) => {
-            if (!line.dataset.nodeA || !line.dataset.nodeB) {
-                console.warn("Skipping invalid connection", line);
-                return;
-            }
-
             const nodeA = document.getElementById(line.dataset.nodeA);
             const nodeB = document.getElementById(line.dataset.nodeB);
 
             if (!nodeA || !nodeB) {
-                console.warn("Skipping connection due to missing nodes", line.dataset.nodeA, line.dataset.nodeB);
+                console.warn("Missing node for connection", line.dataset.nodeA, line.dataset.nodeB);
                 return;
             }
 
@@ -130,35 +143,24 @@ document.addEventListener("DOMContentLoaded", function () {
             const dy = y2 - y1;
             const length = Math.sqrt(dx * dx + dy * dy);
 
-            console.log(`Line from (${x1}, ${y1}) to (${x2}, ${y2}) - Width: ${length}px`);
-
-            line.style.width = `${length}px`;
-            line.style.left = `${x1}px`;
-            line.style.top = `${y1}px`;
-            line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
-            line.style.border = "1px solid yellow"; // DEBUG: Outline for visibility
+            if (length > 0) {
+                line.style.width = `${length}px`;
+                line.style.left = `${x1}px`;
+                line.style.top = `${y1}px`;
+                line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+                line.style.display = "block";
+            } else {
+                line.style.display = "none";
+            }
         });
     }
 
     function highlightConnections(node, isHovering) {
         connections.forEach((line) => {
-            if (!line.dataset.nodeA || !line.dataset.nodeB) {
-                console.warn("Skipping invalid connection", line);
-                return;
-            }
-
-            const nodeA = document.getElementById(line.dataset.nodeA);
-            const nodeB = document.getElementById(line.dataset.nodeB);
-
-            if (!nodeA || !nodeB) {
-                console.warn("Skipping connection due to missing nodes", line.dataset.nodeA, line.dataset.nodeB);
-                return;
-            }
-
             if (line.dataset.nodeA === node.id || line.dataset.nodeB === node.id) {
                 line.style.background = isHovering
                     ? "linear-gradient(to right, rgba(0,140,255,1), white)"
-                    : "linear-gradient(to right, white, transparent)";
+                    : "rgba(255,255,255,0.5)";
             }
         });
     }
