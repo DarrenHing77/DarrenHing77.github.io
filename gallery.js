@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const gallery = document.getElementById("gallery");
     const nodes = [];
     const connections = [];
-    const nodeSize = 100;  // matched clearly with CSS size
+    const nodeSize = 150;  // matched clearly with CSS size
     const spacing = 140;   // no overlaps
     const numNodes = 12;
 
