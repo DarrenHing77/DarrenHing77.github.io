@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const gallery = document.getElementById("gallery");
     const nodes = [];
     const connections = [];
-    const nodeSize = 150;
+    const nodeSize = 200;
     const spacing = nodeSize * 1.5;
     const padding = nodeSize / 2;
     const numNodes = 10; // Total images you provided
