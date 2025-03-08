@@ -3,7 +3,7 @@ document.addEventListener("DOMContentLoaded", function() {
     const nodes = [];
     const connections = [];
     const nodeSize = 110; // slightly reduced to avoid overlap clearly
-    const spacing = 160;  // safe spacing between nodes
+ // safe spacing between nodes
     const numNodes = 12; // Adjusted as per your preference
 
 const images = [
