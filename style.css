@@ -1,110 +1,84 @@
 body {
     background-color: black;
-    color: white;
     margin: 0;
-    font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+    padding-top: 80px; /* Ensure body content never goes under header */
     overflow: hidden;
-    cursor: default;
+    font-family: Arial, sans-serif;
+    color: #0078A0;
 }
 
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 20px;
-    background: black;
     position: fixed;
-    width: 100%;
     top: 0;
+    left: 0;
+    width: 100%;
+    padding: 15px 20px;
+    box-sizing: border-box;
+    background: black;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
     z-index: 1000;
 }
 
-.menu {
-    display: flex;
-    gap: 20px;
-}
-
 .menu a {
-    color: white;
+    color: #0078A0;
     text-decoration: none;
-}
-
-.dropdown {
-    position: relative;
-}
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: black;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px rgba(255, 255, 255, 0.2);
-}
-
-.dropdown:hover .dropdown-content {
-    display: block;
+    margin: 0 15px;
+    font-size: 16px;
 }
 
 .container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 100vh;
-    padding: 80px 20px 20px;
+    height: calc(100vh - 80px); /* height adjusted to prevent overflow */
 }
 
 .bio {
-    width: 30%;
+    width: 25%;
     padding: 20px;
+    box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.bio h2 {
+    color: #F8A332;
 }
 
 .gallery-container {
-    width: 65%;
-    height: 90vh;
+    width: 75%;
     position: relative;
     overflow: hidden;
-    user-select: none;
-}
-
-.line {
-    position: absolute;
-    background: white;
-    height: 2px;
-    transform-origin: top left;
-    z-index: 0;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .node {
     position: absolute;
-    width: 180px;
-    height: 180px;
-    background: rgba(255, 255, 255, 0.2);
-    border: 2px solid white;
+    width: 100px; /* further reduced size to prevent overlaps and clipping */
+    height: 100px;
     border-radius: 50%;
-    transition: transform 0.3s ease, background 0.3s ease;
-    cursor: pointer;
-    z-index: 1;
+    border: 2px solid white;
+    overflow: hidden;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    z-index: 2;
 }
 
 .node:hover {
-    transform: scale(1.3);
-    background: rgba(255, 255, 255, 0.5);
+    border-color: #008CFF;
+    transform: scale(1.15);
 }
 
 .node img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 50%;
 }
 
-.footer {
-    text-align: center;
-    padding: 20px;
-    background: black;
-    position: relative;
-    width: 100%;
+.line {
+    position: absolute;
+    height: 2px;
+    background: rgba(255,255,255,0.3);
+    z-index: 1; /* ensure connections are behind nodes */
+    transform-origin: 0 0;
+    pointer-events: none;
 }
