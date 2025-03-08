@@ -16,7 +16,7 @@ const images = [
     "media/Nazgul_Full_v002.jpg",
     "media/Revolting-Rhymes-Wolf.jpg",
     "media/SpaceMarines_UE.jpeg",
-    "media/StickMan_Sc8_Sh1.jpg"
+    "media/Stick.Man_Sc8_Sh1.jpg"
 ];
 
 
