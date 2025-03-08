@@ -2,7 +2,7 @@ document.addEventListener("DOMContentLoaded", function () {
     const gallery = document.getElementById("gallery");
     const nodes = [];        // Array to store all nodes (circles)
     const connections = [];  // Array to store connection lines
-    const nodeSize = 130;    // Diameter of each node circle
+    const nodeSize = 250;    // Diameter of each node circle
     const spacing = nodeSize * 1.5; // Minimum spacing between circles to avoid overlap
     const padding = nodeSize / 2;   // Padding from edges to avoid clipping
     const numNodes = 12;     // Total number of nodes to generate
