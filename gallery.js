@@ -1,9 +1,9 @@
-document.addEventListener("DOMContentLoaded", function() {
+document.addEventListener("DOMContentLoaded", function () {
     const gallery = document.getElementById("gallery");
     const nodes = [];
     const connections = [];
-    const nodeSize = 120; // clearly smaller size
-    const spacing = 160; // clearly prevents overlap
+    const nodeSize = 100;  // matched clearly with CSS size
+    const spacing = 140;   // no overlaps
     const numNodes = 12;
 
     const images = [
@@ -12,28 +12,27 @@ document.addEventListener("DOMContentLoaded", function() {
         "media/your-image9.jpg", "media/your-image10.jpg", "media/your-image11.jpg", "media/your-image12.jpg"
     ];
 
-    // reset saved positions ONCE if needed
-    // localStorage.removeItem('fixedNodePositions');
+    const positions = JSON.parse(localStorage.getItem('fixedPositions') || '{}');
 
-    const savedPositions = JSON.parse(localStorage.getItem('fixedNodePositions') || '{}');
+    // Reset positions once if needed:
+    // localStorage.removeItem('fixedPositions');
 
-    function isOverlapping(x, y) {
+    function overlaps(x, y) {
         return nodes.some(node => Math.hypot(node.x - x, node.y - y) < spacing);
     }
 
     for (let i = 0; i < numNodes; i++) {
-        let x, y, attempts = 0;
-
-        if (savedPositions[`node-${i}`]) {
-            ({ x, y } = savedPositions[`node-${i}`]);
+        let x, y, tries = 0;
+        if (positions[`node-${i}`]) {
+            ({ x, y } = positions[`node-${i}`]);
         } else {
             do {
-                x = Math.random() * (gallery.clientWidth - nodeSize);
-                y = Math.random() * (gallery.clientHeight - nodeSize);
-                attempts++;
-            } while (isOverlapping(x, y) && attempts < 5000);
+                x = Math.random() * (gallery.clientWidth - nodeSize - 40) + 20;
+                y = Math.random() * (gallery.clientHeight - nodeSize - 40) + 20;
+                tries++;
+            } while (overlaps(x, y) && tries < 5000);
 
-            savedPositions[`node-${i}`] = { x, y };
+            positions[`node-${i}`] = { x, y };
         }
 
         const node = document.createElement("div");
@@ -46,52 +45,52 @@ document.addEventListener("DOMContentLoaded", function() {
         node.onmouseleave = () => highlight(node, false);
 
         gallery.appendChild(node);
-        nodes.push({element: node, x, y});
+        nodes.push({ element: node, x, y });
     }
 
-    localStorage.setItem('fixedNodePositions', JSON.stringify(savedPositions));
+    localStorage.setItem('fixedPositions', JSON.stringify(positions));
 
-    function connectNodes() {
-        nodes.forEach(node => {
-            const neighbors = nodes.filter(n => n !== node)
-                .map(n => ({ node: n, dist: Math.hypot(node.x - n.x, node.y - n.y) }))
-                .sort((a, b) => a.dist - b.dist)
-                .slice(0, 2);
+    // Connect each node to its two nearest neighbors
+    nodes.forEach(node => {
+        const neighbors = nodes.filter(n => n !== node)
+            .map(n => ({ node: n, dist: Math.hypot(node.x - n.x, node.y - n.y) }))
+            .sort((a, b) => a.dist - b.dist)
+            .slice(0, 2);
 
-            neighbors.forEach(({node: neighbor}) => {
-                if (!connections.some(c => 
-                    (c.nodeA === node && c.nodeB === neighbor) || 
-                    (c.nodeA === neighbor && c.nodeB === node))) {
-                    const line = document.createElement("div");
-                    line.className = "line";
-                    gallery.insertBefore(line, gallery.firstChild);
-                    updateLine(line, node, neighbor);
-                    connections.push({element: line, nodeA: node, nodeB: neighbor});
-                }
-            });
+        neighbors.forEach(({ node: neighbor }) => {
+            if (!connections.some(c =>
+                (c.nodeA === node && c.nodeB === neighbor) ||
+                (c.nodeA === neighbor && c.nodeB === node))) {
+
+                const line = document.createElement("div");
+                line.className = "line";
+                gallery.insertBefore(line, gallery.firstChild);
+                updateLine(line, node, neighbor);
+                connections.push({ element: line, nodeA: node, nodeB: neighbor });
+            }
         });
-    }
+    });
 
     function updateLine(line, nodeA, nodeB) {
-        const x1 = nodeA.x + nodeSize / 2, y1 = nodeA.y + nodeSize / 2;
-        const x2 = nodeB.x + nodeSize / 2, y2 = nodeB.y + nodeSize / 2;
-        const dx = x2 - x1, dy = y2 - y1;
-        line.style.width = `${Math.hypot(dx, dy)}px`;
+        const x1 = nodeA.x + nodeSize / 2;
+        const y1 = nodeA.y + nodeSize / 2;
+        const x2 = nodeB.x + nodeSize / 2;
+        const y2 = nodeB.y + nodeSize / 2;
+        const length = Math.hypot(x2 - x1, y2 - y1);
+        line.style.width = `${length}px`;
         line.style.left = `${x1}px`;
         line.style.top = `${y1}px`;
-        line.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+        line.style.transform = `rotate(${Math.atan2(y2 - y1, x2 - x1)}rad)`;
     }
 
     function highlight(node, hover) {
         connections.forEach(({ element, nodeA, nodeB }) => {
             if (nodeA.element === node || nodeB.element === node) {
-                const gradientDir = nodeA.element === node ? 'to right' : 'to left';
-                element.style.background = hover ?
-                    `linear-gradient(${gradientDir}, #008CFF, rgba(255,255,255,0.2))` :
-                    'rgba(255,255,255,0.3)';
+                const dir = nodeA.element === node ? 'to right' : 'to left';
+                element.style.background = hover
+                    ? `linear-gradient(${dir}, #008CFF, rgba(255,255,255,0.3))`
+                    : 'rgba(255,255,255,0.3)';
             }
         });
     }
-
-    connectNodes();
 });
