@@ -1,64 +1,70 @@
 body {
-    background: black;
-    font-family: Arial, sans-serif;
+    background-color: black;
     margin: 0;
+    padding-top: 80px; /* Ensure body content never goes under header */
     overflow: hidden;
+    font-family: Arial, sans-serif;
+    color: #0078A0;
 }
 
 .header {
     position: fixed;
     top: 0;
     left: 0;
-    right: 0;
-    padding: 20px;
+    width: 100%;
+    padding: 15px 20px;
+    box-sizing: border-box;
     background: black;
-    color: #0078A0;
-    z-index: 100;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    z-index: 1000;
 }
 
 .menu a {
     color: #0078A0;
     text-decoration: none;
-    margin-right: 20px;
+    margin: 0 15px;
+    font-size: 16px;
 }
 
 .container {
     display: flex;
-    position: absolute;
-    top: 80px; /* height of header */
-    bottom: 0;
-    left: 0;
-    right: 0;
+    height: calc(100vh - 80px); /* height adjusted to prevent overflow */
 }
 
 .bio {
-    width: 25%; /* reduced clearly to provide more gallery space */
+    width: 25%;
     padding: 20px;
-    color: #0078A0;
     box-sizing: border-box;
+    overflow-y: auto;
+}
+
+.bio h2 {
+    color: #F8A332;
 }
 
 .gallery-container {
-    width: 75%; /* clearly more space */
+    width: 75%;
     position: relative;
-    padding: 20px; /* prevents clipping clearly */
-    box-sizing: border-box;
     overflow: hidden;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .node {
     position: absolute;
-    width: 120px; /* smaller circle */
-    height: 120px;
+    width: 100px; /* further reduced size to prevent overlaps and clipping */
+    height: 100px;
     border-radius: 50%;
     border: 2px solid white;
     overflow: hidden;
-    z-index: 2; /* clearly on top */
-    transition: transform 0.2s, border-color 0.2s;
+    transition: transform 0.2s ease, border-color 0.2s ease;
+    z-index: 2;
 }
 
 .node:hover {
-    border-color: #008CFF; /* clearly blue outline */
+    border-color: #008CFF;
     transform: scale(1.15);
 }
 
@@ -72,6 +78,7 @@ body {
     position: absolute;
     height: 2px;
     background: rgba(255,255,255,0.3);
-    z-index: 1; /* clearly behind circles */
+    z-index: 1; /* ensure connections are behind nodes */
     transform-origin: 0 0;
+    pointer-events: none;
 }
