@@ -8,25 +8,32 @@ body {
 }
 
 .header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 20px;
+    background-color: black;
+    color: #0078A0;
+    width: 100%;
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    padding: 15px 20px;
-    box-sizing: border-box;
-    background: black;
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
     z-index: 1000;
+    box-sizing: border-box;
+}
+
+.menu {
+    display: flex;
+    gap: 20px;
+    justify-content: flex-end; /* explicitly aligned to the right */
 }
 
 .menu a {
     color: #0078A0;
     text-decoration: none;
-    margin: 0 15px;
-    font-size: 16px;
+    white-space: nowrap;
 }
+
 
 .container {
     display: flex;
