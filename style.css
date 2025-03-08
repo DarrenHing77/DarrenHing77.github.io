@@ -1,10 +1,12 @@
 body {
     background-color: black;
+    color: white;
     margin: 0;
-    padding-top: 80px; /* Ensure body content never goes under header */
-    overflow: hidden;
     font-family: Arial, sans-serif;
-    color: #0078A0;
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+    overflow: hidden;
 }
 
 .header {
@@ -13,66 +15,76 @@ body {
     align-items: center;
     padding: 20px;
     background-color: black;
-    color: #0078A0;
-    width: 100%;
     position: fixed;
+    width: 100%;
     top: 0;
-    left: 0;
     z-index: 1000;
-    box-sizing: border-box;
 }
 
 .menu {
     display: flex;
     gap: 20px;
-    justify-content: flex-end; /* explicitly aligned to the right */
 }
 
 .menu a {
-    color: #0078A0;
+    color: #2196F3;
     text-decoration: none;
-    white-space: nowrap;
+    font-size: 18px;
 }
 
+.menu a:hover {
+    color: orange;
+}
 
 .container {
     display: flex;
-    height: calc(100vh - 80px); /* height adjusted to prevent overflow */
+    justify-content: space-between;
+    align-items: center;
+    height: calc(100vh - 80px);
+    padding-top: 80px; /* header height offset */
 }
 
 .bio {
-    width: 25%;
+    width: 30%;
     padding: 20px;
-    box-sizing: border-box;
-    overflow-y: auto;
+    color: #2196F3;
 }
 
 .bio h2 {
-    color: #F8A332;
+    color: orange;
 }
 
-.gallery-container {
-    width: 75%;
+.bio a {
+    color: orange;
+    text-decoration: none;
+}
+
+.bio a:hover {
+    text-decoration: underline;
+}
+
+#gallery {
     position: relative;
+    width: 70%;
+    height: 100%;
     overflow: hidden;
-    padding: 20px;
-    box-sizing: border-box;
 }
 
 .node {
     position: absolute;
-    width: 100px; /* further reduced size to prevent overlaps and clipping */
-    height: 100px;
-    border-radius: 50%;
+    width: 110px;
+    height: 110px;
+    background: rgba(255, 255, 255, 0.1);
     border: 2px solid white;
+    border-radius: 50%;
     overflow: hidden;
-    transition: transform 0.2s ease, border-color 0.2s ease;
+    transition: transform 0.3s ease, border-color 0.3s ease;
     z-index: 2;
 }
 
 .node:hover {
-    border-color: #008CFF;
-    transform: scale(1.15);
+    transform: scale(1.2);
+    border-color: #2196F3; /* Blue border on hover */
 }
 
 .node img {
@@ -84,8 +96,6 @@ body {
 .line {
     position: absolute;
     height: 2px;
-    background: rgba(255,255,255,0.3);
-    z-index: 1; /* ensure connections are behind nodes */
-    transform-origin: 0 0;
-    pointer-events: none;
+    background: linear-gradient(to right, #2196F3, transparent);
+    z-index: 1;
 }
