@@ -1,96 +1,157 @@
 document.addEventListener("DOMContentLoaded", function () {
     const gallery = document.getElementById("gallery");
-    const nodes = [];
-    const connections = [];
-    const nodeSize = 150;  // matched clearly with CSS size
-    const spacing = 140;   // no overlaps
-    const numNodes = 12;
+    const nodes = [];        // Array to store all nodes (circles)
+    const connections = [];  // Array to store connection lines
+    const nodeSize = 500;    // Diameter of each node circle
+    const spacing = nodeSize * 1.5; // Minimum spacing between circles to avoid overlap
+    const padding = nodeSize / 2;   // Padding from edges to avoid clipping
+    const numNodes = 12;     // Total number of nodes to generate
 
     const images = [
         "media/orcKing01.jpg", "media/P_Rick01.jpg", "media/The-Smeds-and-the-Smoos.jpeg", "media/zog01.jpg",
-        "media/your-image5.jpg", "media/your-image6.jpg", "media/your-image7.jpg", "media/your-image8.jpg",
-        "media/your-image9.jpg", "media/your-image10.jpg", "media/your-image11.jpg", "media/your-image12.jpg"
+        "media/Carnage_WIde_Eevee.jpg", "media/HighwayRat01.jpg", "media/Nazgul_Full_v002.jpg", 
+        "media/Revolting-Rhymes-Wolf.jpg", "media/SpaceMarines_UE.jpeg", "media/StickMan_Sc8_Sh1.jpg",
+        "media/your-image11.jpg", "media/your-image12.jpg"
     ];
 
-    const positions = JSON.parse(localStorage.getItem('fixedPositions') || '{}');
-
-    // Reset positions once if needed:
-    // localStorage.removeItem('fixedPositions');
-
-    function overlaps(x, y) {
-        return nodes.some(node => Math.hypot(node.x - x, node.y - y) < spacing);
+    // Utility function to ensure new circles don't overlap existing ones
+    function isOverlapping(newX, newY) {
+        return nodes.some(node => {
+            const dx = node.x - newX;
+            const dy = node.y - newY;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            return distance < spacing;
+        });
     }
 
-    for (let i = 0; i < numNodes; i++) {
-        let x, y, tries = 0;
-        if (positions[`node-${i}`]) {
-            ({ x, y } = positions[`node-${i}`]);
-        } else {
-            do {
-                x = Math.random() * (gallery.clientWidth - nodeSize - 40) + 20;
-                y = Math.random() * (gallery.clientHeight - nodeSize - 40) + 20;
-                tries++;
-            } while (overlaps(x, y) && tries < 5000);
+    // Create circles at random, non-overlapping positions
+    function createNode(image) {
+        let x, y, attempts = 0;
+        const maxAttempts = 100; // Avoid infinite loops
 
-            positions[`node-${i}`] = { x, y };
-        }
+        do {
+            x = padding + Math.random() * (gallery.clientWidth - nodeSize - 2 * padding);
+            y = padding + Math.random() * (gallery.clientHeight - nodeSize - 2 * padding);
+            attempts++;
+        } while (isOverlapping(x, y) && attempts < maxAttempts);
 
+        if (attempts >= maxAttempts) return; // Abort if unable to place circle after many tries
+
+        // Create DOM element for the node
         const node = document.createElement("div");
-        node.className = "node";
+        node.classList.add("node");
         node.style.left = `${x}px`;
         node.style.top = `${y}px`;
-        node.innerHTML = `<img src="${images[i]}">`;
 
-        node.onmouseenter = () => highlight(node, true);
-        node.onmouseleave = () => highlight(node, false);
-
+        const img = document.createElement("img");
+        img.src = image;
+        node.appendChild(img);
         gallery.appendChild(node);
+
+        // Store node position and element for later use
         nodes.push({ element: node, x, y });
     }
 
-    localStorage.setItem('fixedPositions', JSON.stringify(positions));
+    // Generate all nodes
+    images.slice(0, numNodes).forEach(img => createNode(img));
 
-    // Connect each node to its two nearest neighbors
+    // Calculate distance between two nodes
+    function calculateDistance(nodeA, nodeB) {
+        const dx = nodeA.x - nodeB.x;
+        const dy = nodeA.y - nodeB.y;
+        return Math.sqrt(dx * dx + dy * dy);
+    }
+
+    // Create connections (lines) between each node and its two closest neighbors
     nodes.forEach(node => {
-        const neighbors = nodes.filter(n => n !== node)
-            .map(n => ({ node: n, dist: Math.hypot(node.x - n.x, node.y - n.y) }))
+        const distances = nodes
+            .filter(n => n !== node)
+            .map(n => ({ node: n, dist: calculateDistance(node, n) }))
             .sort((a, b) => a.dist - b.dist)
-            .slice(0, 2);
+            .slice(0, 2); // Take two closest nodes
 
-        neighbors.forEach(({ node: neighbor }) => {
+        distances.forEach(neighbor => {
+            // Avoid creating duplicate connections
             if (!connections.some(c =>
-                (c.nodeA === node && c.nodeB === neighbor) ||
-                (c.nodeA === neighbor && c.nodeB === node))) {
+                (c.nodeA === node && c.nodeB === neighbor.node) ||
+                (c.nodeA === neighbor.node && c.nodeB === node))) {
 
                 const line = document.createElement("div");
-                line.className = "line";
+                line.className = 'line';
                 gallery.insertBefore(line, gallery.firstChild);
-                updateLine(line, node, neighbor);
-                connections.push({ element: line, nodeA: node, nodeB: neighbor });
+
+                connections.push({
+                    element: line,
+                    nodeA: node,
+                    nodeB: neighbor.node
+                });
             }
         });
     });
 
-    function updateLine(line, nodeA, nodeB) {
-        const x1 = nodeA.x + nodeSize / 2;
-        const y1 = nodeA.y + nodeSize / 2;
-        const x2 = nodeB.x + nodeSize / 2;
-        const y2 = nodeB.y + nodeSize / 2;
-        const length = Math.hypot(x2 - x1, y2 - y1);
-        line.style.width = `${length}px`;
-        line.style.left = `${x1}px`;
-        line.style.top = `${y1}px`;
-        line.style.transform = `rotate(${Math.atan2(y2 - y1, x2 - x1)}rad)`;
-    }
-
-    function highlight(node, hover) {
+    // Update line positions based on connected node centers
+    function updateConnections() {
         connections.forEach(({ element, nodeA, nodeB }) => {
-            if (nodeA.element === node || nodeB.element === node) {
-                const dir = nodeA.element === node ? 'to right' : 'to left';
-                element.style.background = hover
-                    ? `linear-gradient(${dir}, #008CFF, rgba(255,255,255,0.3))`
-                    : 'rgba(255,255,255,0.3)';
-            }
+            const x1 = nodeA.x + nodeSize / 2;
+            const y1 = nodeA.y + nodeSize / 2;
+            const x2 = nodeB.x + nodeSize / 2;
+            const y2 = nodeB.y + nodeSize / 2;
+
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const length = Math.sqrt(dx * dx + dy * dy);
+
+            element.style.width = `${length}px`;
+            element.style.left = `${x1}px`;
+            element.style.top = `${y1}px`;
+            element.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
         });
     }
+
+    // Initial call to set up lines correctly
+    updateConnections();
+
+    // Highlight connections when hovering nodes
+    nodes.forEach(node => {
+        node.element.addEventListener('mouseenter', () => {
+            connections.forEach(c => {
+                if (c.nodeA === node || c.nodeB === node) {
+                    c.element.style.background = 'linear-gradient(to right, #00f, transparent)';
+                }
+            });
+            node.element.style.borderColor = '#00f';
+        });
+
+        node.element.addEventListener('mouseleave', () => {
+            connections.forEach(c => {
+                if (c.nodeA === node || c.nodeB === node) {
+                    c.element.style.background = 'linear-gradient(to right, #666, transparent)';
+                }
+            });
+            node.element.style.borderColor = '#fff';
+        });
+    });
+
+    // Save fixed positions to localStorage to avoid layout changing on refresh
+    function savePositions() {
+        const positions = nodes.map(({ x, y }) => ({ x, y }));
+        localStorage.setItem('nodePositions', JSON.stringify(positions));
+    }
+
+    function loadPositions() {
+        const positions = JSON.parse(localStorage.getItem('nodePositions'));
+        if (positions && positions.length === nodes.length) {
+            positions.forEach((pos, i) => {
+                nodes[i].x = pos.x;
+                nodes[i].y = pos.y;
+                nodes[i].element.style.left = `${pos.x}px`;
+                nodes[i].element.style.top = `${pos.y}px`;
+            });
+            updateConnections();
+        }
+    }
+
+    // Attempt to load saved positions, or save positions if none found
+    loadPositions();
+    if (!localStorage.getItem('nodePositions')) savePositions();
 });
