@@ -1,113 +1,77 @@
 body {
-    background-color: black;
-    color: white;
-    margin: 0;
+    background: black;
     font-family: Arial, sans-serif;
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+    margin: 0;
     overflow: hidden;
-    cursor: default;
 }
 
 .header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
     padding: 20px;
     background: black;
-    position: fixed;
-    width: 100%;
-    top: 0;
-    z-index: 1000;
-}
-
-.menu {
-    display: flex;
-    gap: 20px;
+    color: #0078A0;
+    z-index: 100;
 }
 
 .menu a {
-    color: white;
+    color: #0078A0;
     text-decoration: none;
-}
-
-.dropdown {
-    position: relative;
-}
-
-.dropdown-content {
-    display: none;
-    position: absolute;
-    background-color: black;
-    min-width: 160px;
-    box-shadow: 0px 8px 16px rgba(255, 255, 255, 0.2);
-}
-
-.dropdown:hover .dropdown-content {
-    display: block;
+    margin-right: 20px;
 }
 
 .container {
     display: flex;
-    justify-content: space-between;
-    align-items: center;
-    height: 100vh;
-    padding: 80px 20px 20px;
+    position: absolute;
+    top: 80px; /* height of header */
+    bottom: 0;
+    left: 0;
+    right: 0;
 }
 
 .bio {
-    width: 30%;
+    width: 25%; /* reduced clearly to provide more gallery space */
     padding: 20px;
-}
-
-.gallery-container {
-    position: absolute;
-    top: 80px; /* Below header */
-    right: 0;
-    bottom: 0;
-    left: 30%; /* Leaves room for bio */
-    overflow: hidden;
-    padding: 10px;
+    color: #0078A0;
     box-sizing: border-box;
 }
 
-.node {
-    z-index: 2;
-    position: absolute;
+.gallery-container {
+    width: 75%; /* clearly more space */
+    position: relative;
+    padding: 20px; /* prevents clipping clearly */
+    box-sizing: border-box;
     overflow: hidden;
 }
 
-.node:hover {
-    border-color: #008CFF;
-    transform: scale(1.2);
-}
-
-.line {
+.node {
     position: absolute;
-    height: 2px;
-    background: rgba(255,255,255,0.3);
-    z-index: 0; /* behind circles */
+    width: 120px; /* smaller circle */
+    height: 120px;
+    border-radius: 50%;
+    border: 2px solid white;
+    overflow: hidden;
+    z-index: 2; /* clearly on top */
+    transition: transform 0.2s, border-color 0.2s;
 }
 
-
 .node:hover {
-    transform: scale(1.3);
-    background: transparent; /* No background change */
-    border-color: rgba(0, 140, 255, 1); /* Blue outline */
+    border-color: #008CFF; /* clearly blue outline */
+    transform: scale(1.15);
 }
 
 .node img {
     width: 100%;
     height: 100%;
     object-fit: cover;
-    border-radius: 50%;
 }
 
-.footer {
-    text-align: center;
-    padding: 20px;
-    background: black;
-    position: relative;
-    width: 100%;
+.line {
+    position: absolute;
+    height: 2px;
+    background: rgba(255,255,255,0.3);
+    z-index: 1; /* clearly behind circles */
+    transform-origin: 0 0;
 }
