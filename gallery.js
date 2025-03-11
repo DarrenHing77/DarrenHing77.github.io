@@ -1,12 +1,9 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const gallery = document.getElementById("gallery");
-    const nodes = [];        // Array to store all nodes (circles)
-    const connections = [];  // Array to store connection lines
-    const nodeSize = 500;    // Diameter of each node circle
-    const spacing = nodeSize * 1.5; // Minimum spacing between circles to avoid overlap
-    const padding = nodeSize / 2;   // Padding from edges to avoid clipping
-    const numNodes = 12;     // Total number of nodes to generate
-
+    const svg = document.getElementById("gallery");
+    const width = svg.clientWidth;
+    const height = svg.clientHeight;
+    const nodeSize = 80;
+    const spacing = nodeSize * 1.5;
     const images = [
         "media/orcKing01.jpg", "media/P_Rick01.jpg", "media/The-Smeds-and-the-Smoos.jpeg", "media/zog01.jpg",
         "media/Carnage_WIde_Eevee.jpg", "media/HighwayRat01.jpg", "media/Nazgul_Full_v002.jpg", 
@@ -14,144 +11,69 @@ document.addEventListener("DOMContentLoaded", function () {
         "media/your-image11.jpg", "media/your-image12.jpg"
     ];
 
-    // Utility function to ensure new circles don't overlap existing ones
-    function isOverlapping(newX, newY) {
-        return nodes.some(node => {
-            const dx = node.x - newX;
-            const dy = node.y - newY;
-            const distance = Math.sqrt(dx * dx + dy * dy);
-            return distance < spacing;
+    // Circle packing algorithm to prevent overlap
+    let circles = [];
+    let attempts = 0;
+    while (circles.length < images.length && attempts < images.length * 10) {
+        let newCircle = {
+            x: Math.random() * (width - nodeSize) + nodeSize / 2,
+            y: Math.random() * (height - nodeSize) + nodeSize / 2,
+            r: nodeSize / 2
+        };
+
+        let overlapping = circles.some(other => {
+            let d = Math.sqrt((newCircle.x - other.x) ** 2 + (newCircle.y - other.y) ** 2);
+            return d < nodeSize;
         });
+
+        if (!overlapping) circles.push(newCircle);
+        attempts++;
     }
 
-    // Create circles at random, non-overlapping positions
-    function createNode(image) {
-        let x, y, attempts = 0;
-        const maxAttempts = 100; // Avoid infinite loops
+    // Draw circles
+    circles.forEach((circle, index) => {
+        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
+        let img = document.createElementNS("http://www.w3.org/2000/svg", "image");
+        img.setAttribute("href", images[index]);
+        img.setAttribute("x", circle.x - nodeSize / 2);
+        img.setAttribute("y", circle.y - nodeSize / 2);
+        img.setAttribute("width", nodeSize);
+        img.setAttribute("height", nodeSize);
+        img.setAttribute("clip-path", "circle()");
 
-        do {
-            x = padding + Math.random() * (gallery.clientWidth - nodeSize - 2 * padding);
-            y = padding + Math.random() * (gallery.clientHeight - nodeSize - 2 * padding);
-            attempts++;
-        } while (isOverlapping(x, y) && attempts < maxAttempts);
+        let outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        outline.setAttribute("cx", circle.x);
+        outline.setAttribute("cy", circle.y);
+        outline.setAttribute("r", nodeSize / 2);
+        outline.setAttribute("class", "circle-outline");
 
-        if (attempts >= maxAttempts) return; // Abort if unable to place circle after many tries
+        g.appendChild(outline);
+        g.appendChild(img);
+        svg.appendChild(g);
+    });
 
-        // Create DOM element for the node
-        const node = document.createElement("div");
-        node.classList.add("node");
-        node.style.left = `${x}px`;
-        node.style.top = `${y}px`;
-
-        const img = document.createElement("img");
-        img.src = image;
-        node.appendChild(img);
-        gallery.appendChild(node);
-
-        // Store node position and element for later use
-        nodes.push({ element: node, x, y });
-    }
-
-    // Generate all nodes
-    images.slice(0, numNodes).forEach(img => createNode(img));
-
-    // Calculate distance between two nodes
-    function calculateDistance(nodeA, nodeB) {
-        const dx = nodeA.x - nodeB.x;
-        const dy = nodeA.y - nodeB.y;
-        return Math.sqrt(dx * dx + dy * dy);
-    }
-
-    // Create connections (lines) between each node and its two closest neighbors
-    nodes.forEach(node => {
-        const distances = nodes
-            .filter(n => n !== node)
-            .map(n => ({ node: n, dist: calculateDistance(node, n) }))
+    // Generate connections
+    let connections = [];
+    circles.forEach((circle, i) => {
+        let closest = circles
+            .map((other, j) => ({
+                index: j,
+                dist: Math.sqrt((circle.x - other.x) ** 2 + (circle.y - other.y) ** 2)
+            }))
+            .filter(o => o.index !== i)
             .sort((a, b) => a.dist - b.dist)
-            .slice(0, 2); // Take two closest nodes
+            .slice(0, 2); // Connect to 2 closest neighbors
 
-        distances.forEach(neighbor => {
-            // Avoid creating duplicate connections
-            if (!connections.some(c =>
-                (c.nodeA === node && c.nodeB === neighbor.node) ||
-                (c.nodeA === neighbor.node && c.nodeB === node))) {
-
-                const line = document.createElement("div");
-                line.className = 'line';
-                gallery.insertBefore(line, gallery.firstChild);
-
-                connections.push({
-                    element: line,
-                    nodeA: node,
-                    nodeB: neighbor.node
-                });
-            }
+        closest.forEach(o => {
+            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+            line.setAttribute("x1", circle.x);
+            line.setAttribute("y1", circle.y);
+            line.setAttribute("x2", circles[o.index].x);
+            line.setAttribute("y2", circles[o.index].y);
+            line.setAttribute("class", "line");
+            svg.insertBefore(line, svg.firstChild);
+            connections.push(line);
         });
     });
 
-    // Update line positions based on connected node centers
-    function updateConnections() {
-        connections.forEach(({ element, nodeA, nodeB }) => {
-            const x1 = nodeA.x + nodeSize / 2;
-            const y1 = nodeA.y + nodeSize / 2;
-            const x2 = nodeB.x + nodeSize / 2;
-            const y2 = nodeB.y + nodeSize / 2;
-
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const length = Math.sqrt(dx * dx + dy * dy);
-
-            element.style.width = `${length}px`;
-            element.style.left = `${x1}px`;
-            element.style.top = `${y1}px`;
-            element.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
-        });
-    }
-
-    // Initial call to set up lines correctly
-    updateConnections();
-
-    // Highlight connections when hovering nodes
-    nodes.forEach(node => {
-        node.element.addEventListener('mouseenter', () => {
-            connections.forEach(c => {
-                if (c.nodeA === node || c.nodeB === node) {
-                    c.element.style.background = 'linear-gradient(to right, #00f, transparent)';
-                }
-            });
-            node.element.style.borderColor = '#00f';
-        });
-
-        node.element.addEventListener('mouseleave', () => {
-            connections.forEach(c => {
-                if (c.nodeA === node || c.nodeB === node) {
-                    c.element.style.background = 'linear-gradient(to right, #666, transparent)';
-                }
-            });
-            node.element.style.borderColor = '#fff';
-        });
-    });
-
-    // Save fixed positions to localStorage to avoid layout changing on refresh
-    function savePositions() {
-        const positions = nodes.map(({ x, y }) => ({ x, y }));
-        localStorage.setItem('nodePositions', JSON.stringify(positions));
-    }
-
-    function loadPositions() {
-        const positions = JSON.parse(localStorage.getItem('nodePositions'));
-        if (positions && positions.length === nodes.length) {
-            positions.forEach((pos, i) => {
-                nodes[i].x = pos.x;
-                nodes[i].y = pos.y;
-                nodes[i].element.style.left = `${pos.x}px`;
-                nodes[i].element.style.top = `${pos.y}px`;
-            });
-            updateConnections();
-        }
-    }
-
-    // Attempt to load saved positions, or save positions if none found
-    loadPositions();
-    if (!localStorage.getItem('nodePositions')) savePositions();
 });
