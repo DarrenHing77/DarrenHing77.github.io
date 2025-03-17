@@ -1,9 +1,8 @@
-// Wait for DOM to be fully loaded
 document.addEventListener("DOMContentLoaded", function() {
     console.log("DOM Content Loaded - Initializing Gallery");
     
-    // Give the browser a moment to fully render the page before initializing
-    setTimeout(initializeGallery, 100);
+    // Critical fix: Wait a bit longer for layout calculations to complete
+    setTimeout(initializeGallery, 300);
     
     function initializeGallery() {
         const gallery = document.getElementById("gallery");
@@ -14,33 +13,34 @@ document.addEventListener("DOMContentLoaded", function() {
             return;
         }
         
-        console.log("Gallery dimensions:", gallery.clientWidth, "x", gallery.clientHeight);
-        
-        // Verify the gallery has dimensions
-        if (gallery.clientWidth <= 0 || gallery.clientHeight <= 0) {
-            console.error("Gallery has no dimensions. Check CSS and layout.");
-            // Force a minimum size if needed
-            gallery.style.minHeight = "400px";
-            gallery.style.minWidth = "400px";
+        // CRITICAL FIX: Force the gallery to have height if it doesn't
+        if (gallery.clientHeight < 10) {
+            console.warn("Gallery has no height - forcing minimum height");
+            gallery.style.height = "500px";
+            gallery.style.minHeight = "500px";
+            // Force a reflow
+            void gallery.offsetHeight;
         }
+        
+        console.log("Gallery dimensions:", gallery.clientWidth, "x", gallery.clientHeight);
         
         const nodes = [];
         const connections = [];
-        const nodeSize = 140; // Size of each node in pixels
-        const spacing = nodeSize * 1.3; // Minimum distance between nodes
+        const nodeSize = 140;
+        const spacing = nodeSize * 1.3;
         
-        // List of images to display
+        // List of images to display - FIXED IMAGE PATHS
         const images = [
-            "media/orcKing01.jpg", 
-            "media/P_Rick01.jpg", 
-            "media/The-Smeds-and-the-Smoos.jpeg", 
-            "media/zog01.jpg",
-            "media/Carnage_Wlde_Eevee.jpg", 
-            "media/HighwayRat01.jpg", 
-            "media/Nazgul_Full_v002.jpg", 
-            "media/Revolting-Rhymes-Wolf.jpg", 
-            "media/SpaceMarines_UE.jpeg", 
-            "media/StickMan_Sc&S_h1.jpg"
+            "https://darrenhing77.github.io/media/orcKing01.jpg", 
+            "https://darrenhing77.github.io/media/P_Rick01.jpg", 
+            "https://darrenhing77.github.io/media/The-Smeds-and-the-Smoos.jpeg", 
+            "https://darrenhing77.github.io/media/zog01.jpg",
+            "https://darrenhing77.github.io/media/Carnage_Wlde_Eevee.jpg", 
+            "https://darrenhing77.github.io/media/HighwayRat01.jpg", 
+            "https://darrenhing77.github.io/media/Nazgul_Full_v002.jpg", 
+            "https://darrenhing77.github.io/media/Revolting-Rhymes-Wolf.jpg", 
+            "https://darrenhing77.github.io/media/SpaceMarines_UE.jpeg", 
+            "https://darrenhing77.github.io/media/StickMan_Sc&S_h1.jpg"
         ];
         
         // Check if nodes would overlap
@@ -54,13 +54,17 @@ document.addEventListener("DOMContentLoaded", function() {
         
         // Create a node with an image
         function createNode(image) {
-            const maxWidth = gallery.clientWidth - nodeSize;
-            const maxHeight = gallery.clientHeight - nodeSize;
-            
-            if (maxWidth <= 0 || maxHeight <= 0) {
-                console.error("Gallery area too small for nodes", maxWidth, maxHeight);
-                return null;
+            // CRITICAL FIX: Ensure gallery has dimensions before calculating
+            if (gallery.clientWidth <= 0 || gallery.clientHeight <= 0) {
+                console.error("Gallery still has no dimensions!");
+                gallery.style.height = "500px";
+                gallery.style.minHeight = "500px";
+                // Force reflow
+                void gallery.offsetHeight;
             }
+            
+            const maxWidth = Math.max(gallery.clientWidth - nodeSize, 300);
+            const maxHeight = Math.max(gallery.clientHeight - nodeSize, 300);
             
             // Try to find a position that doesn't overlap
             let x, y, attempts = 0;
@@ -71,7 +75,7 @@ document.addEventListener("DOMContentLoaded", function() {
                 
                 // Break after too many attempts
                 if (attempts >= 50) {
-                    console.log("Couldn't find non-overlapping position after 50 attempts");
+                    console.log("Couldn't find non-overlapping position after 50 attempts - using last attempt");
                     break;
                 }
             } while (isOverlapping(x, y));
@@ -86,10 +90,12 @@ document.addEventListener("DOMContentLoaded", function() {
             const img = document.createElement("img");
             img.src = image;
             img.alt = "Gallery artwork";
+            
+            // Handle image error
             img.onerror = () => {
                 console.warn(`Failed to load image: ${image}`);
-                // Use a fallback color instead of loading a placeholder
-                node.style.backgroundColor = "#1e90ff";
+                node.classList.add("image-error");
+                node.removeChild(img);
             };
             
             node.appendChild(img);
@@ -143,52 +149,12 @@ document.addEventListener("DOMContentLoaded", function() {
             element.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
         }
         
-        // Update all connections
-        function updateAllConnections() {
-            connections.forEach(updateConnection);
-        }
-        
-        // Highlight connections for a node
-        function highlightConnections(node) {
-            // Highlight the node itself
-            node.element.classList.add("active");
-            
-            // Highlight connections and connected nodes
-            node.connections.forEach(conn => {
-                conn.element.style.background = "linear-gradient(to right, #1e90ff, white)";
-                conn.element.style.height = "3px";
-                conn.element.style.opacity = "1";
-                
-                // Also highlight connected node
-                const otherNode = conn.nodeA === node ? conn.nodeB : conn.nodeA;
-                otherNode.element.classList.add("connected");
-            });
-            
-            // Fade other connections
-            connections.forEach(conn => {
-                if (!node.connections.includes(conn)) {
-                    conn.element.style.opacity = "0.3";
-                }
-            });
-        }
-        
-        // Reset all highlights
-        function resetConnectionHighlights() {
-            nodes.forEach(node => {
-                node.element.classList.remove("active");
-                node.element.classList.remove("connected");
-            });
-            
-            connections.forEach(conn => {
-                conn.element.style.background = "linear-gradient(to right, white, blue)";
-                conn.element.style.height = "2px";
-                conn.element.style.opacity = "1";
-            });
-        }
-        
-        // Create all the nodes
+        // CRITICAL FIX: Create nodes and force gallery reflow
         console.log(`Creating ${images.length} nodes...`);
         const createdNodes = [];
+        
+        // Force gallery to be visible and have dimensions
+        gallery.style.display = "block";
         
         for (const image of images) {
             const node = createNode(image);
@@ -220,21 +186,23 @@ document.addEventListener("DOMContentLoaded", function() {
         // Add hover events to nodes
         nodes.forEach(node => {
             node.element.addEventListener("mouseenter", () => {
-                highlightConnections(node);
+                node.element.classList.add("active");
+                node.connections.forEach(conn => {
+                    conn.element.style.height = "3px";
+                    conn.element.style.opacity = "1";
+                    const otherNode = conn.nodeA === node ? conn.nodeB : conn.nodeA;
+                    otherNode.element.classList.add("connected");
+                });
             });
             
             node.element.addEventListener("mouseleave", () => {
-                resetConnectionHighlights();
+                node.element.classList.remove("active");
+                node.connections.forEach(conn => {
+                    conn.element.style.height = "2px";
+                    const otherNode = conn.nodeA === node ? conn.nodeB : conn.nodeA;
+                    otherNode.element.classList.remove("connected");
+                });
             });
-        });
-        
-        // Handle window resize
-        let resizeTimer;
-        window.addEventListener("resize", () => {
-            clearTimeout(resizeTimer);
-            resizeTimer = setTimeout(() => {
-                updateAllConnections();
-            }, 250);
         });
     }
 });
