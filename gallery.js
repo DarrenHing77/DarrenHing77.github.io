@@ -1,79 +1,87 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const svg = document.getElementById("gallery");
-    const width = svg.clientWidth;
-    const height = svg.clientHeight;
-    const nodeSize = 80;
-    const spacing = nodeSize * 1.5;
+    const gallery = document.getElementById("gallery");
+    const nodes = [];
+    const connections = [];
+    const nodeSize = 140;
+    const spacing = nodeSize * 1.8;
+    const numNodes = 12; // Reduced to 12 for better spacing
+
     const images = [
         "media/orcKing01.jpg", "media/P_Rick01.jpg", "media/The-Smeds-and-the-Smoos.jpeg", "media/zog01.jpg",
-        "media/Carnage_WIde_Eevee.jpg", "media/HighwayRat01.jpg", "media/Nazgul_Full_v002.jpg", 
-        "media/Revolting-Rhymes-Wolf.jpg", "media/SpaceMarines_UE.jpeg", "media/StickMan_Sc8_Sh1.jpg",
-        "media/your-image11.jpg", "media/your-image12.jpg"
+        "media/Carnage_Wlde_Eevee.jpg", "media/HighwayRat01.jpg", "media/Nazgul_Full_v002.jpg", 
+        "media/Revolting-Rhymes-Wolf.jpg", "media/SpaceMarines_UE.jpeg", "media/StickMan_Sc&S_h1.jpg"
     ];
 
-    // Circle packing algorithm to prevent overlap
-    let circles = [];
-    let attempts = 0;
-    while (circles.length < images.length && attempts < images.length * 10) {
-        let newCircle = {
-            x: Math.random() * (width - nodeSize) + nodeSize / 2,
-            y: Math.random() * (height - nodeSize) + nodeSize / 2,
-            r: nodeSize / 2
-        };
-
-        let overlapping = circles.some(other => {
-            let d = Math.sqrt((newCircle.x - other.x) ** 2 + (newCircle.y - other.y) ** 2);
-            return d < nodeSize;
+    function isOverlapping(newX, newY) {
+        return nodes.some(node => {
+            const dx = node.x - newX;
+            const dy = node.y - newY;
+            return Math.sqrt(dx * dx + dy * dy) < spacing;
         });
-
-        if (!overlapping) circles.push(newCircle);
-        attempts++;
     }
 
-    // Draw circles
-    circles.forEach((circle, index) => {
-        let g = document.createElementNS("http://www.w3.org/2000/svg", "g");
-        let img = document.createElementNS("http://www.w3.org/2000/svg", "image");
-        img.setAttribute("href", images[index]);
-        img.setAttribute("x", circle.x - nodeSize / 2);
-        img.setAttribute("y", circle.y - nodeSize / 2);
-        img.setAttribute("width", nodeSize);
-        img.setAttribute("height", nodeSize);
-        img.setAttribute("clip-path", "circle()");
+    function createNode(image) {
+        let x, y, attempts = 0;
+        do {
+            x = Math.random() * (gallery.clientWidth - nodeSize * 1.5);
+            y = Math.random() * (gallery.clientHeight - nodeSize * 1.5);
+            attempts++;
+        } while (isOverlapping(x, y) && attempts < 50);
 
-        let outline = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        outline.setAttribute("cx", circle.x);
-        outline.setAttribute("cy", circle.y);
-        outline.setAttribute("r", nodeSize / 2);
-        outline.setAttribute("class", "circle-outline");
+        if (attempts >= 50) return;
 
-        g.appendChild(outline);
-        g.appendChild(img);
-        svg.appendChild(g);
-    });
+        const node = document.createElement("div");
+        node.classList.add("node");
+        node.style.left = `${x}px`;
+        node.style.top = `${y}px`;
 
-    // Generate connections
-    let connections = [];
-    circles.forEach((circle, i) => {
-        let closest = circles
-            .map((other, j) => ({
-                index: j,
-                dist: Math.sqrt((circle.x - other.x) ** 2 + (circle.y - other.y) ** 2)
-            }))
-            .filter(o => o.index !== i)
+        const img = document.createElement("img");
+        img.src = image;
+        node.appendChild(img);
+
+        gallery.appendChild(node);
+        nodes.push({ element: node, x, y });
+    }
+
+    function createConnection(nodeA, nodeB) {
+        if (!nodeA || !nodeB) return;
+
+        const line = document.createElement("div");
+        line.classList.add("line");
+        gallery.insertBefore(line, gallery.firstChild);
+        connections.push({ element: line, nodeA, nodeB });
+    }
+
+    images.forEach(img => createNode(img));
+
+    // Connect nearest neighbors
+    nodes.forEach((nodeA, index) => {
+        let closest = nodes
+            .map((nodeB, i) => ({ nodeB, dist: Math.hypot(nodeB.x - nodeA.x, nodeB.y - nodeA.y), i }))
+            .filter(({ nodeB }) => nodeA !== nodeB)
             .sort((a, b) => a.dist - b.dist)
-            .slice(0, 2); // Connect to 2 closest neighbors
+            .slice(0, 2); // Connect to 2 closest
 
-        closest.forEach(o => {
-            let line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-            line.setAttribute("x1", circle.x);
-            line.setAttribute("y1", circle.y);
-            line.setAttribute("x2", circles[o.index].x);
-            line.setAttribute("y2", circles[o.index].y);
-            line.setAttribute("class", "line");
-            svg.insertBefore(line, svg.firstChild);
-            connections.push(line);
-        });
+        closest.forEach(({ nodeB }) => createConnection(nodeA, nodeB));
     });
 
+    function updateConnections() {
+        connections.forEach(({ element, nodeA, nodeB }) => {
+            const x1 = nodeA.element.offsetLeft + nodeSize / 2;
+            const y1 = nodeA.element.offsetTop + nodeSize / 2;
+            const x2 = nodeB.element.offsetLeft + nodeSize / 2;
+            const y2 = nodeB.element.offsetTop + nodeSize / 2;
+
+            const dx = x2 - x1;
+            const dy = y2 - y1;
+            const length = Math.hypot(dx, dy);
+
+            element.style.width = `${length}px`;
+            element.style.left = `${x1}px`;
+            element.style.top = `${y1}px`;
+            element.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
+        });
+    }
+
+    updateConnections();
 });
