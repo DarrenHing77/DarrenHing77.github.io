@@ -12,7 +12,7 @@
         <nav class="menu">
             <a href="index.html">Home</a>
             <div class="dropdown">
-                <a href="#">Portfolio ▼</a>
+                <a href="portfolio.html">Portfolio ▼</a>
                 <div class="dropdown-content">
                     <a href="personal-work.html">Personal Work</a>
                     <a href="technical.html">Technical</a>
@@ -30,12 +30,25 @@
             <p>
                 Hey there! I'm Darren Hing—artist, toolmaker, and professional button masher. By day, I wrangle nodes and shaders in the film industry... and by night? I swap the techy hat for a sketchpad, conjuring up characters and the worlds they live in. 
                 With over a decade in feature animation, I build cool things, break them, then build them better. 
-                I’ll try to keep this space updated—no promises. Check out my reels <a href="#" style="color: orange;">here</a>.
+                I'll try to keep this space updated—no promises. Check out my reels <a href="reels.html" style="color: orange;">here</a>.
             </p>
         </div>
+        <!-- Make sure this has both the class and id -->
         <div class="gallery-container" id="gallery"></div>
     </div>
-
+    
+    <!-- Add console logging for debugging -->
+    <script>
+        console.log('Page loaded. Checking elements:');
+        window.addEventListener('DOMContentLoaded', () => {
+            const gallery = document.getElementById('gallery');
+            console.log('Gallery element found:', gallery);
+            console.log('Gallery dimensions:', {
+                width: gallery.clientWidth,
+                height: gallery.clientHeight
+            });
+        });
+    </script>
     <script src="gallery.js"></script>
 </body>
 </html>
