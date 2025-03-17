@@ -21,6 +21,7 @@ body {
     width: 100%;
     top: 0;
     z-index: 1000;
+    box-sizing: border-box;
 }
 
 /* Navigation */
@@ -65,9 +66,11 @@ body {
 .container {
     display: flex;
     justify-content: space-between;
-    align-items: center;
+    align-items: stretch; /* Changed from center to stretch */
     height: calc(100vh - 80px);
-    padding: 80px 20px 20px;
+    margin-top: 80px; /* Added explicit margin */
+    padding: 0 20px 20px; /* Modified padding */
+    box-sizing: border-box;
 }
 
 /* Bio Section */
@@ -75,6 +78,10 @@ body {
     width: 30%;
     padding: 20px;
     color: #1e90ff;
+    /* Ensure this has a defined height */
+    height: 100%;
+    box-sizing: border-box;
+    overflow-y: auto; /* Allow scrolling if content is too large */
 }
 
 .bio a {
@@ -84,10 +91,13 @@ body {
 /* Gallery */
 .gallery-container {
     flex: 1;
-    height: 100%;
+    height: 100%; /* Make sure it takes full height */
+    min-height: 400px; /* Set a minimum height */
     position: relative;
     overflow: hidden;
     user-select: none;
+    border: 1px solid rgba(255, 255, 255, 0.1); /* Added subtle border for visibility */
+    box-sizing: border-box;
 }
 
 /* Connections */
@@ -97,6 +107,7 @@ body {
     background: linear-gradient(to right, white, blue);
     transform-origin: top left;
     z-index: 0;
+    transition: opacity 0.3s ease, height 0.3s ease, background 0.3s ease;
 }
 
 /* Circles */
@@ -110,11 +121,22 @@ body {
     transition: transform 0.3s ease, border-color 0.3s ease;
     cursor: pointer;
     z-index: 1;
+    /* Add box-sizing to ensure dimensions are accurate */
+    box-sizing: border-box;
+    display: flex; /* Ensure child image is properly centered */
+    justify-content: center;
+    align-items: center;
+    overflow: hidden; /* Ensure image doesn't overflow */
 }
 
-.node:hover {
-    transform: scale(1.2);
-    border-color: blue;
+.node:hover, .node.active {
+    transform: scale(1.1);
+    border-color: #1e90ff;
+    z-index: 2;
+}
+
+.node.connected {
+    border-color: #1e90ff;
 }
 
 /* Images Inside Circles */
@@ -123,4 +145,27 @@ body {
     height: 100%;
     object-fit: cover;
     border-radius: 50%;
+    display: block;
+}
+
+/* Add responsive adjustments */
+@media (max-width: 768px) {
+    .container {
+        flex-direction: column;
+    }
+    
+    .bio {
+        width: 100%;
+        height: auto;
+        max-height: 30vh;
+    }
+    
+    .gallery-container {
+        height: 70vh;
+    }
+    
+    .node {
+        width: 100px;
+        height: 100px;
+    }
 }
