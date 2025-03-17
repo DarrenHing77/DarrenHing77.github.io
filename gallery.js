@@ -71,7 +71,7 @@
             text-decoration: none;
         }
 
-        /* Container - Adjusted to take full height */
+        /* Container - Full height */
         .container {
             display: flex;
             justify-content: space-between;
@@ -94,7 +94,7 @@
             color: orange;
         }
 
-        /* Gallery - Adjusted to take full height */
+        /* Gallery - Full height */
         .gallery-container {
             flex: 1;
             position: relative;
@@ -121,7 +121,7 @@
             width: 140px;
             height: 140px;
             background: rgba(255, 255, 255, 0.2);
-            border: 3px solid white; /* Slightly thicker border for visibility */
+            border: 3px solid white;
             border-radius: 50%;
             transition: transform 0.3s ease, border-color 0.3s ease;
             cursor: pointer;
@@ -252,15 +252,17 @@
                 const nodes = [];
                 const connections = [];
                 const nodeSize = 140;
-                const spacing = nodeSize * 1.3;
+                const spacing = nodeSize * 1.2; // Minimum distance between node centers
+                const NUM_NODES = 12; // Always create exactly 12 nodes
                 
                 // Set up fallback colors for when images fail to load
                 const fallbackColors = [
                     "#ff69b4", "#9370db", "#00ced1", "#32cd32", "#1e90ff", 
-                    "#ff7f50", "#9932cc", "#ffd700", "#00ff7f", "#ff4500"
+                    "#ff7f50", "#9932cc", "#ffd700", "#00ff7f", "#ff4500",
+                    "#4169e1", "#8a2be2"
                 ];
                 
-                // Image paths - use both relative and absolute paths as fallbacks
+                // Image paths with fallbacks - ensure we have exactly 12
                 const images = [
                     { path: "media/orcKing01.jpg", fallback: "https://darrenhing77.github.io/media/orcKing01.jpg" },
                     { path: "media/P_Rick01.jpg", fallback: "https://darrenhing77.github.io/media/P_Rick01.jpg" },
@@ -271,33 +273,105 @@
                     { path: "media/Nazgul_Full_v002.jpg", fallback: "https://darrenhing77.github.io/media/Nazgul_Full_v002.jpg" },
                     { path: "media/Revolting-Rhymes-Wolf.jpg", fallback: "https://darrenhing77.github.io/media/Revolting-Rhymes-Wolf.jpg" },
                     { path: "media/SpaceMarines_UE.jpeg", fallback: "https://darrenhing77.github.io/media/SpaceMarines_UE.jpeg" },
-                    { path: "media/StickMan_Sc&S_h1.jpg", fallback: "https://darrenhing77.github.io/media/StickMan_Sc&S_h1.jpg" }
+                    { path: "media/StickMan_Sc&S_h1.jpg", fallback: "https://darrenhing77.github.io/media/StickMan_Sc&S_h1.jpg" },
+                    // Add two more to ensure we always have 12
+                    { path: "media/placeholder1.jpg", fallback: null },
+                    { path: "media/placeholder2.jpg", fallback: null }
                 ];
                 
                 function isOverlapping(newX, newY) {
                     return nodes.some(node => {
                         const dx = node.x - newX;
                         const dy = node.y - newY;
-                        return Math.sqrt(dx * dx + dy * dy) < spacing;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        return distance < spacing;
                     });
                 }
                 
-                function createNode(imageData, index) {
-                    // Account for the node size when calculating position limits
-                    const maxWidth = Math.max(gallery.clientWidth - nodeSize, 300);
-                    const maxHeight = Math.max(gallery.clientHeight - nodeSize, 300);
+                // Improved node placement algorithm that ensures no overlaps
+                function placeNodesWithoutOverlap() {
+                    const maxWidth = gallery.clientWidth - nodeSize;
+                    const maxHeight = gallery.clientHeight - nodeSize;
                     
-                    let x, y, attempts = 0;
-                    do {
-                        x = Math.random() * maxWidth;
-                        y = Math.random() * maxHeight;
-                        attempts++;
-                    } while (isOverlapping(x, y) && attempts < 50);
+                    // Calculate how many nodes to place on each axis for even distribution
+                    // Using a grid-based approach for initial positions
+                    const gridCols = Math.ceil(Math.sqrt(NUM_NODES * gallery.clientWidth / gallery.clientHeight));
+                    const gridRows = Math.ceil(NUM_NODES / gridCols);
                     
+                    // Generate positions for all nodes at once
+                    const positions = [];
+                    
+                    // First try a grid-based approach for more even distribution
+                    const cellWidth = maxWidth / gridCols;
+                    const cellHeight = maxHeight / gridRows;
+                    
+                    for (let i = 0; i < gridRows; i++) {
+                        for (let j = 0; j < gridCols; j++) {
+                            if (positions.length < NUM_NODES) {
+                                // Add some randomness within each cell
+                                const x = j * cellWidth + Math.random() * (cellWidth - nodeSize);
+                                const y = i * cellHeight + Math.random() * (cellHeight - nodeSize);
+                                positions.push({ x, y });
+                            }
+                        }
+                    }
+                    
+                    // Shuffle positions to make the placement less regular
+                    shuffleArray(positions);
+                    
+                    // Adjust positions to avoid overlaps using repulsion
+                    for (let iteration = 0; iteration < 50; iteration++) {
+                        let moved = false;
+                        
+                        for (let i = 0; i < positions.length; i++) {
+                            for (let j = 0; j < positions.length; j++) {
+                                if (i === j) continue;
+                                
+                                const dx = positions[i].x - positions[j].x;
+                                const dy = positions[i].y - positions[j].y;
+                                const distance = Math.sqrt(dx * dx + dy * dy);
+                                
+                                if (distance < spacing) {
+                                    moved = true;
+                                    
+                                    // Calculate repulsion force (stronger when closer)
+                                    const force = (spacing - distance) / distance;
+                                    
+                                    // Move both nodes away from each other
+                                    positions[i].x += dx * force * 0.5;
+                                    positions[i].y += dy * force * 0.5;
+                                    positions[j].x -= dx * force * 0.5;
+                                    positions[j].y -= dy * force * 0.5;
+                                    
+                                    // Keep within bounds
+                                    positions[i].x = Math.max(0, Math.min(maxWidth, positions[i].x));
+                                    positions[i].y = Math.max(0, Math.min(maxHeight, positions[i].y));
+                                    positions[j].x = Math.max(0, Math.min(maxWidth, positions[j].x));
+                                    positions[j].y = Math.max(0, Math.min(maxHeight, positions[j].y));
+                                }
+                            }
+                        }
+                        
+                        if (!moved) break; // Stop if no nodes were moved
+                    }
+                    
+                    return positions;
+                }
+                
+                // Helper to shuffle an array
+                function shuffleArray(array) {
+                    for (let i = array.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [array[i], array[j]] = [array[j], array[i]];
+                    }
+                    return array;
+                }
+                
+                function createNode(imageData, index, position) {
                     const node = document.createElement("div");
                     node.classList.add("node");
-                    node.style.left = `${x}px`;
-                    node.style.top = `${y}px`;
+                    node.style.left = `${position.x}px`;
+                    node.style.top = `${position.y}px`;
                     
                     // Try to load the image
                     const img = document.createElement("img");
@@ -306,12 +380,12 @@
                     img.onerror = function() {
                         console.warn(`Failed to load primary image: ${imageData.path}, trying fallback...`);
                         
-                        // Try the fallback URL
-                        if (this.src !== imageData.fallback) {
+                        // Try the fallback URL if available
+                        if (imageData.fallback && this.src !== imageData.fallback) {
                             this.src = imageData.fallback;
                         } else {
-                            // If fallback also fails, use a color
-                            console.warn(`Fallback image also failed, using color instead`);
+                            // If fallback also fails or doesn't exist, use a color
+                            console.warn(`Using color fallback for node ${index}`);
                             node.classList.add("image-error");
                             node.style.backgroundColor = fallbackColors[index % fallbackColors.length];
                             
@@ -329,10 +403,14 @@
                     
                     gallery.appendChild(node);
                     
-                    const nodeData = { element: node, x, y, connections: [] };
+                    const nodeData = { 
+                        element: node, 
+                        x: position.x + nodeSize/2, 
+                        y: position.y + nodeSize/2, 
+                        connections: [] 
+                    };
                     nodes.push(nodeData);
                     
-                    console.log(`Node created at (${x.toFixed(0)}, ${y.toFixed(0)})`);
                     return nodeData;
                 }
                 
@@ -356,10 +434,10 @@
                 function updateConnection(connection) {
                     const { element, nodeA, nodeB } = connection;
                     
-                    const x1 = parseInt(nodeA.element.style.left) + nodeSize / 2;
-                    const y1 = parseInt(nodeA.element.style.top) + nodeSize / 2;
-                    const x2 = parseInt(nodeB.element.style.left) + nodeSize / 2;
-                    const y2 = parseInt(nodeB.element.style.top) + nodeSize / 2;
+                    const x1 = nodeA.x;
+                    const y1 = nodeA.y;
+                    const x2 = nodeB.x;
+                    const y2 = nodeB.y;
                     
                     const dx = x2 - x1;
                     const dy = y2 - y1;
@@ -371,16 +449,21 @@
                     element.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
                 }
                 
-                console.log(`Creating ${images.length} nodes...`);
+                // Place nodes without overlaps
+                console.log(`Creating ${NUM_NODES} nodes with improved placement...`);
+                const positions = placeNodesWithoutOverlap();
                 const createdNodes = [];
                 
-                images.forEach((imageData, index) => {
-                    const node = createNode(imageData, index);
+                // Create all nodes using the calculated positions
+                for (let i = 0; i < NUM_NODES; i++) {
+                    const imageData = images[i % images.length]; // Use modulo to handle if we have fewer images than nodes
+                    const node = createNode(imageData, i, positions[i]);
                     if (node) createdNodes.push(node);
-                });
+                }
                 
                 console.log(`Created ${createdNodes.length} nodes successfully`);
                 
+                // Connect each node to its 2 closest neighbors
                 createdNodes.forEach(nodeA => {
                     const closest = createdNodes
                         .filter(nodeB => nodeB !== nodeA)
@@ -398,6 +481,7 @@
                 
                 console.log(`Created ${connections.length} connections`);
                 
+                // Add hover effects
                 nodes.forEach(node => {
                     node.element.addEventListener("mouseenter", () => {
                         node.element.classList.add("active");
@@ -421,6 +505,8 @@
                 
                 // Update connections on window resize
                 window.addEventListener("resize", function() {
+                    // When window is resized, just update connection lines
+                    // We don't reposition nodes to maintain user's view
                     connections.forEach(updateConnection);
                 });
             }
