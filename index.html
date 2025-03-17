@@ -5,6 +5,22 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Darren Hing Design</title>
     <link rel="stylesheet" href="styles.css">
+    <!-- Add the critical CSS fix inline to ensure it loads before the gallery script -->
+    <style>
+        /* Force gallery to have height */
+        .gallery-container {
+            height: 500px !important;
+            min-height: 500px !important;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            display: block;
+        }
+        /* Ensure container has proper height */
+        .container {
+            height: calc(100vh - 80px);
+            min-height: 600px;
+            margin-top: 80px;
+        }
+    </style>
 </head>
 <body>
     <div class="header">
@@ -33,22 +49,13 @@
                 I'll try to keep this space updated—no promises. Check out my reels <a href="reels.html" style="color: orange;">here</a>.
             </p>
         </div>
-        <!-- Make sure this has both the class and id -->
-        <div class="gallery-container" id="gallery"></div>
+        <!-- Ensure the gallery has both class and id -->
+        <div class="gallery-container" id="gallery" style="height: 500px; min-height: 500px;"></div>
     </div>
     
-    <!-- Add console logging for debugging -->
-    <script>
-        console.log('Page loaded. Checking elements:');
-        window.addEventListener('DOMContentLoaded', () => {
-            const gallery = document.getElementById('gallery');
-            console.log('Gallery element found:', gallery);
-            console.log('Gallery dimensions:', {
-                width: gallery.clientWidth,
-                height: gallery.clientHeight
-            });
-        });
-    </script>
+    <!-- Add script.js for dropdown functionality -->
+    <script src="script.js"></script>
+    <!-- Load the gallery script after ensuring the container exists -->
     <script src="gallery.js"></script>
 </body>
 </html>
