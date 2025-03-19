@@ -4,7 +4,6 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Darren Hing Design</title>
-    <!-- Use inline CSS since styles.css is failing to load -->
     <style>
         /* Body styles */
         body {
@@ -14,8 +13,8 @@
             font-family: Arial, sans-serif;
             display: flex;
             flex-direction: column;
-            height: 100vh;
-            overflow: hidden;
+            min-height: 100vh;
+            overflow-x: hidden;
             cursor: default;
         }
 
@@ -72,14 +71,14 @@
             text-decoration: none;
         }
 
+        /* Container - Full height */
         .container {
             display: flex;
             justify-content: space-between;
-            align-items: stretch;
-            height: calc(100vh - 80px);
-            margin-top: 80px;
-            padding: 0 20px 20px;
+            margin-top: 80px; /* Space for fixed header */
+            padding: 0 20px 20px; 
             box-sizing: border-box;
+            min-height: calc(100vh - 80px); /* Minimum height after header */
         }
 
         /* Bio Section */
@@ -87,25 +86,22 @@
             width: 30%;
             padding: 20px;
             color: #1e90ff;
-            height: 100%;
             box-sizing: border-box;
-            overflow-y: auto;
         }
 
         .bio a {
             color: orange;
         }
 
-        /* Gallery */
+        /* Gallery - Full height */
         .gallery-container {
             flex: 1;
-            height: 500px !important;
-            min-height: 500px !important;
             position: relative;
-            overflow: hidden;
+            overflow: visible; /* Changed from hidden to visible to prevent clipping */
             user-select: none;
             border: 1px solid rgba(255, 255, 255, 0.1);
             box-sizing: border-box;
+            min-height: calc(100vh - 80px); /* Take full viewport minus header */
         }
 
         /* Connections */
@@ -124,7 +120,7 @@
             width: 140px;
             height: 140px;
             background: rgba(255, 255, 255, 0.2);
-            border: 2px solid white;
+            border: 3px solid white;
             border-radius: 50%;
             transition: transform 0.3s ease, border-color 0.3s ease;
             cursor: pointer;
@@ -139,25 +135,12 @@
         .node:hover, .node.active {
             transform: scale(1.1);
             border-color: #1e90ff;
-            z-index: 2;
+            z-index: 3;
         }
 
         .node.connected {
             border-color: #1e90ff;
-        }
-
-        /* Images Inside Circles */
-        .node img {
-            width: 100%;
-            height: 100%;
-            object-fit: cover;
-            border-radius: 50%;
-            display: block;
-        }
-
-        /* Error node style */
-        .node.image-error {
-            background-color: #1e90ff;
+            z-index: 2;
         }
 
         /* Show class for dropdown menu */
@@ -174,11 +157,10 @@
             .bio {
                 width: 100%;
                 height: auto;
-                max-height: 30vh;
             }
             
             .gallery-container {
-                height: 70vh !important;
+                min-height: 70vh;
             }
             
             .node {
@@ -194,7 +176,7 @@
         <nav class="menu">
             <a href="index.html">Home</a>
             <div class="dropdown">
-                <a href="portfolio.html">Portfolio ▼</a>
+                <a href="#">Portfolio ▼</a>
                 <div class="dropdown-content">
                     <a href="personal-work.html">Personal Work</a>
                     <a href="technical.html">Technical</a>
@@ -212,22 +194,34 @@
             <p>
                 Hey there! I'm Darren Hing—artist, toolmaker, and professional button masher. By day, I wrangle nodes and shaders in the film industry... and by night? I swap the techy hat for a sketchpad, conjuring up characters and the worlds they live in. 
                 With over a decade in feature animation, I build cool things, break them, then build them better. 
-                I'll try to keep this space updated—no promises. Check out my reels <a href="reels.html" style="color: orange;">here</a>.
+                I'll try to keep this space updated—no promises. Check out my reels <a href="reels.html">here</a>.
             </p>
         </div>
         <div class="gallery-container" id="gallery"></div>
     </div>
     
-    <script src="script.js"></script>
     <script>
-        // Inline gallery.js to avoid loading issues
+        // Dropdown menu functionality
+        document.addEventListener("DOMContentLoaded", function () {
+            document.querySelectorAll(".dropdown").forEach(dropdown => {
+                dropdown.addEventListener("click", function (event) {
+                    event.stopPropagation();
+                    this.querySelector(".dropdown-content").classList.toggle("show");
+                });
+            });
+            window.addEventListener("click", function () {
+                document.querySelectorAll(".dropdown-content").forEach(menu => {
+                    menu.classList.remove("show");
+                });
+            });
+        });
+    </script>
+    
+    <script>
         document.addEventListener("DOMContentLoaded", function() {
             console.log("DOM Content Loaded - Initializing Gallery");
             
-            // Wait for layout to complete
-            setTimeout(initializeGallery, 300);
-            
-            function initializeGallery() {
+            setTimeout(function() {
                 const gallery = document.getElementById("gallery");
                 
                 if (!gallery) {
@@ -235,105 +229,108 @@
                     return;
                 }
                 
-                // Force gallery dimensions
-                if (gallery.clientHeight < 10) {
-                    gallery.style.height = "500px";
-                    gallery.style.minHeight = "500px";
-                    void gallery.offsetHeight; // Force reflow
-                }
-                
-                console.log("Gallery dimensions:", gallery.clientWidth, "x", gallery.clientHeight);
-                
-                const nodes = [];
-                const connections = [];
+                // Node and connection data
                 const nodeSize = 140;
-                const spacing = nodeSize * 1.3;
                 
-                // Use local fallback images that are known to work
-                const images = [
-                    // Use placeholder colors for all nodes instead of trying to load external images
-                    "color:#1e90ff", "color:#ff6347", "color:#32cd32", "color:#ffd700",
-                    "color:#ff4500", "color:#9932cc", "color:#00ced1", "color:#ff69b4",
-                    "color:#8a2be2", "color:#00ff7f"
+                // Define fixed positions for 12 nodes - these won't change on refresh
+                const nodePositions = [
+                    // Position for each node (calculated to fit inside a typical gallery)
+                    {x: 100, y: 150},  // Node 1
+                    {x: 300, y: 100},  // Node 2
+                    {x: 500, y: 150},  // Node 3
+                    {x: 700, y: 100},  // Node 4
+                    {x: 900, y: 150},  // Node 5
+                    {x: 150, y: 300},  // Node 6
+                    {x: 350, y: 350},  // Node 7
+                    {x: 550, y: 300},  // Node 8
+                    {x: 750, y: 350},  // Node 9
+                    {x: 950, y: 300},  // Node 10
+                    {x: 200, y: 500},  // Node 11
+                    {x: 800, y: 500}   // Node 12
                 ];
                 
-                function isOverlapping(newX, newY) {
-                    return nodes.some(node => {
-                        const dx = node.x - newX;
-                        const dy = node.y - newY;
-                        return Math.sqrt(dx * dx + dy * dy) < spacing;
+                // Define fixed connections - which nodes should connect to which
+                const nodeConnections = [
+                    [0, 1], [1, 2], [2, 3], [3, 4],  // Top row connections
+                    [5, 6], [6, 7], [7, 8], [8, 9],  // Middle row connections
+                    [10, 11],                         // Bottom row connections
+                    [0, 5], [1, 6], [2, 7], [3, 8], [4, 9],  // Vertical connections
+                    [5, 10], [9, 11]                  // Connect to bottom row
+                ];
+                
+                // Use these colors for the nodes in a fixed order
+                const nodeColors = [
+                    "#ff69b4", // Pink 
+                    "#9370db", // Purple
+                    "#00ced1", // Turquoise
+                    "#32cd32", // Lime Green
+                    "#1e90ff", // Dodger Blue
+                    "#ff7f50", // Coral
+                    "#9932cc", // Dark Orchid
+                    "#ffd700", // Gold
+                    "#00ff7f", // Spring Green
+                    "#ff4500", // Orange Red
+                    "#4169e1", // Royal Blue
+                    "#8a2be2"  // Blue Violet
+                ];
+                
+                // Create nodes and connections arrays
+                const nodes = [];
+                const connections = [];
+                
+                // Create all 12 nodes with fixed positions
+                for (let i = 0; i < 12; i++) {
+                    // Create node element
+                    const node = document.createElement("div");
+                    node.classList.add("node");
+                    node.style.left = `${nodePositions[i].x}px`;
+                    node.style.top = `${nodePositions[i].y}px`;
+                    node.style.backgroundColor = nodeColors[i];
+                    
+                    // Add to gallery
+                    gallery.appendChild(node);
+                    
+                    // Store node data
+                    nodes.push({
+                        element: node,
+                        x: nodePositions[i].x + nodeSize/2,
+                        y: nodePositions[i].y + nodeSize/2,
+                        connections: []
                     });
                 }
                 
-                function createNode(colorData) {
-                    const maxWidth = Math.max(gallery.clientWidth - nodeSize, 300);
-                    const maxHeight = Math.max(gallery.clientHeight - nodeSize, 300);
+                // Create connections between nodes
+                for (const [i, j] of nodeConnections) {
+                    if (i >= nodes.length || j >= nodes.length) continue;
                     
-                    let x, y, attempts = 0;
-                    do {
-                        x = Math.random() * maxWidth;
-                        y = Math.random() * maxHeight;
-                        attempts++;
-                    } while (isOverlapping(x, y) && attempts < 50);
+                    const nodeA = nodes[i];
+                    const nodeB = nodes[j];
                     
-                    const node = document.createElement("div");
-                    node.classList.add("node");
-                    node.style.left = `${x}px`;
-                    node.style.top = `${y}px`;
-                    
-                    // Handle color data instead of images
-                    if (colorData.startsWith("color:")) {
-                        const color = colorData.slice(6);
-                        node.style.backgroundColor = color;
-                    } else {
-                        // Create image if it's a URL
-                        const img = document.createElement("img");
-                        img.src = colorData;
-                        img.alt = "Gallery artwork";
-                        img.onerror = () => {
-                            console.warn(`Failed to load image: ${colorData}`);
-                            node.classList.add("image-error");
-                            node.style.backgroundColor = "#1e90ff";
-                            if (node.contains(img)) {
-                                node.removeChild(img);
-                            }
-                        };
-                        node.appendChild(img);
-                    }
-                    
-                    gallery.appendChild(node);
-                    
-                    const nodeData = { element: node, x, y, connections: [] };
-                    nodes.push(nodeData);
-                    
-                    console.log(`Node created at (${x.toFixed(0)}, ${y.toFixed(0)})`);
-                    return nodeData;
-                }
-                
-                function createConnection(nodeA, nodeB) {
-                    if (!nodeA || !nodeB) return null;
-                    
+                    // Create line element
                     const line = document.createElement("div");
                     line.classList.add("line");
                     gallery.insertBefore(line, gallery.firstChild);
                     
+                    // Store connection data
                     const connection = { element: line, nodeA, nodeB };
                     connections.push(connection);
                     
+                    // Store connection reference in nodes
                     nodeA.connections.push(connection);
                     nodeB.connections.push(connection);
                     
+                    // Update line position
                     updateConnection(connection);
-                    return connection;
                 }
                 
+                // Function to update connection position and rotation
                 function updateConnection(connection) {
                     const { element, nodeA, nodeB } = connection;
                     
-                    const x1 = parseInt(nodeA.element.style.left) + nodeSize / 2;
-                    const y1 = parseInt(nodeA.element.style.top) + nodeSize / 2;
-                    const x2 = parseInt(nodeB.element.style.left) + nodeSize / 2;
-                    const y2 = parseInt(nodeB.element.style.top) + nodeSize / 2;
+                    const x1 = nodeA.x;
+                    const y1 = nodeA.y;
+                    const x2 = nodeB.x;
+                    const y2 = nodeB.y;
                     
                     const dx = x2 - x1;
                     const dy = y2 - y1;
@@ -345,39 +342,12 @@
                     element.style.transform = `rotate(${Math.atan2(dy, dx)}rad)`;
                 }
                 
-                console.log(`Creating ${images.length} nodes...`);
-                const createdNodes = [];
-                
-                for (const image of images) {
-                    const node = createNode(image);
-                    if (node) createdNodes.push(node);
-                }
-                
-                console.log(`Created ${createdNodes.length} nodes successfully`);
-                
-                createdNodes.forEach(nodeA => {
-                    const closest = createdNodes
-                        .filter(nodeB => nodeB !== nodeA)
-                        .map(nodeB => ({
-                            nodeB,
-                            dist: Math.hypot(nodeB.x - nodeA.x, nodeB.y - nodeA.y)
-                        }))
-                        .sort((a, b) => a.dist - b.dist)
-                        .slice(0, 2);
-                    
-                    closest.forEach(({ nodeB }) => {
-                        createConnection(nodeA, nodeB);
-                    });
-                });
-                
-                console.log(`Created ${connections.length} connections`);
-                
+                // Add hover effects to nodes
                 nodes.forEach(node => {
                     node.element.addEventListener("mouseenter", () => {
                         node.element.classList.add("active");
                         node.connections.forEach(conn => {
                             conn.element.style.height = "3px";
-                            conn.element.style.opacity = "1";
                             const otherNode = conn.nodeA === node ? conn.nodeB : conn.nodeA;
                             otherNode.element.classList.add("connected");
                         });
@@ -392,7 +362,14 @@
                         });
                     });
                 });
-            }
+                
+                // Update connections when window is resized
+                window.addEventListener("resize", function() {
+                    connections.forEach(updateConnection);
+                });
+                
+                console.log("Gallery created with fixed node positions");
+            }, 300);
         });
     </script>
 </body>
