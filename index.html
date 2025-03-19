@@ -143,6 +143,15 @@
             z-index: 2;
         }
 
+        /* Images Inside Circles */
+        .node img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            border-radius: 50%;
+            display: block;
+        }
+
         /* Show class for dropdown menu */
         .dropdown-content.show {
             display: block;
@@ -258,20 +267,20 @@
                     [5, 10], [9, 11]                  // Connect to bottom row
                 ];
                 
-                // Use these colors for the nodes in a fixed order
-                const nodeColors = [
-                    "#ff69b4", // Pink 
-                    "#9370db", // Purple
-                    "#00ced1", // Turquoise
-                    "#32cd32", // Lime Green
-                    "#1e90ff", // Dodger Blue
-                    "#ff7f50", // Coral
-                    "#9932cc", // Dark Orchid
-                    "#ffd700", // Gold
-                    "#00ff7f", // Spring Green
-                    "#ff4500", // Orange Red
-                    "#4169e1", // Royal Blue
-                    "#8a2be2"  // Blue Violet
+                // Image paths with fallback colors
+                const nodeImages = [
+                    {path: "media/orcKing01.jpg", color: "#ff69b4"},
+                    {path: "media/P_Rick01.jpg", color: "#9370db"},
+                    {path: "media/The-Smeds-and-the-Smoos.jpeg", color: "#00ced1"},
+                    {path: "media/zog01.jpg", color: "#32cd32"},
+                    {path: "media/Carnage_Wlde_Eevee.jpg", color: "#1e90ff"},
+                    {path: "media/HighwayRat01.jpg", color: "#ff7f50"},
+                    {path: "media/Nazgul_Full_v002.jpg", color: "#9932cc"},
+                    {path: "media/Revolting-Rhymes-Wolf.jpg", color: "#ffd700"},
+                    {path: "media/SpaceMarines_UE.jpeg", color: "#00ff7f"},
+                    {path: "media/StickMan_Sc&S_h1.jpg", color: "#ff4500"},
+                    {path: "media/placeholder1.jpg", color: "#4169e1"},
+                    {path: "media/placeholder2.jpg", color: "#8a2be2"}
                 ];
                 
                 // Create nodes and connections arrays
@@ -285,7 +294,25 @@
                     node.classList.add("node");
                     node.style.left = `${nodePositions[i].x}px`;
                     node.style.top = `${nodePositions[i].y}px`;
-                    node.style.backgroundColor = nodeColors[i];
+                    
+                    // Try to add an image
+                    const img = document.createElement("img");
+                    img.src = nodeImages[i].path;
+                    img.alt = "Gallery artwork";
+                    
+                    // Handle image loading errors
+                    img.onerror = function() {
+                        console.warn(`Failed to load image: ${nodeImages[i].path}, using color fallback`);
+                        node.style.backgroundColor = nodeImages[i].color;
+                        
+                        // Remove the failed image
+                        if (node.contains(img)) {
+                            node.removeChild(img);
+                        }
+                    };
+                    
+                    // Add image to node
+                    node.appendChild(img);
                     
                     // Add to gallery
                     gallery.appendChild(node);
@@ -368,7 +395,7 @@
                     connections.forEach(updateConnection);
                 });
                 
-                console.log("Gallery created with fixed node positions");
+                console.log("Gallery created with images and fixed node positions");
             }, 300);
         });
     </script>
