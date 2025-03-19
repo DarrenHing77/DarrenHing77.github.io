@@ -261,10 +261,9 @@
                 // Define fixed connections - which nodes should connect to which
                 const nodeConnections = [
                     [0, 1], [1, 2], [2, 3], [3, 4],  // Top row connections
-                    [5, 6], [6, 7], [7, 8], [8, 9],  // Middle row connections
-                    [10, 11],                         // Bottom row connections
+                    [5, 6], [6, 7], [7, 8], [8, 9],  // Middle row connections,                        
                     [0, 5], [1, 6], [2, 7], [3, 8], [4, 9],  // Vertical connections
-                    [5, 10]                 // Connect to bottom row
+                    [5, 10],[9,11]                // Connect to bottom row
                 ];
                 
                 // Image paths with fallback colors
