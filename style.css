@@ -9,6 +9,14 @@ body {
     min-height: 100vh;
     overflow-x: hidden;
     cursor: default;
+    border: none;
+}
+
+/* Override to ensure no borders anywhere */
+.container, .gallery-container, .node, .line {
+    border-color: transparent;
+    outline: none;
+    box-shadow: none;
 }
 
 /* Header */
@@ -100,11 +108,14 @@ body {
 /* Connections */
 .line {
     position: absolute;
-    height: 2px;
-    background: linear-gradient(to right, white, blue);
+    height: 3px; /* Thicker line */
+    background: linear-gradient(to right, rgba(255, 255, 255, 0.9), rgba(30, 144, 255, 0.9)); /* More visible gradient */
     transform-origin: top left;
     z-index: 0;
     transition: opacity 0.3s ease, height 0.3s ease, background 0.3s ease;
+    border: none !important;
+    box-shadow: none !important;
+    outline: none !important;
 }
 
 /* Circles */
@@ -126,13 +137,16 @@ body {
 }
 
 .node:hover, .node.active {
-    transform: scale(1.1);
+    transform: scale(1.15);
     border-color: #1e90ff;
+    border-width: 4px;
     z-index: 3;
+    box-shadow: 0 0 20px rgba(30, 144, 255, 0.5);
 }
 
 .node.connected {
     border-color: #1e90ff;
+    border-width: 4px;
     z-index: 2;
 }
 
@@ -442,20 +456,27 @@ button[type="submit"]:hover {
 @media (max-width: 768px) {
     .container {
         flex-direction: column;
+        min-height: auto;
+        height: auto;
     }
     
     .bio {
+        position: relative;
         width: 100%;
+        padding: 20px;
         height: auto;
     }
     
     .gallery-container {
-        min-height: 70vh;
+        position: relative;
+        width: 100%;
+        height: 100vh; /* Full viewport height for mobile */
+        margin-top: 20px;
     }
     
     .node {
-        width: 120px;
-        height: 120px;
+        width: 150px; /* Smaller on mobile but still larger than original */
+        height: 150px;
     }
     
     .gallery-grid {
