@@ -71,12 +71,12 @@ body {
     margin-top: 80px; /* Space for fixed header */
     padding: 0 20px 20px; 
     box-sizing: border-box;
-    min-height: calc(100vh - 80px); /* Minimum height after header */
+    min-height: calc(100vh - 80px - 60px); /* Minimum height after header, accounting for footer */
 }
 
 /* Bio Section */
 .bio {
-    width: 30%;
+    width: 25%; /* Reduced to give gallery more space */
     padding: 20px;
     color: #1e90ff;
     box-sizing: border-box;
@@ -94,7 +94,7 @@ body {
     user-select: none;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-sizing: border-box;
-    min-height: calc(100vh - 80px);
+    min-height: calc(100vh - 80px - 60px);
 }
 
 /* Connections */
@@ -110,8 +110,8 @@ body {
 /* Circles */
 .node {
     position: absolute;
-    width: 140px;
-    height: 140px;
+    width: 154px; /* 10% larger than original */
+    height: 154px; /* 10% larger than original */
     background: rgba(255, 255, 255, 0.2);
     border: 3px solid white;
     border-radius: 50%;
@@ -150,11 +150,41 @@ body {
     display: block;
 }
 
+/* Footer */
+.footer {
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 20px;
+    text-align: center;
+    margin-top: auto;
+    height: 60px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.social-icons {
+    display: flex;
+    gap: 20px;
+    justify-content: center;
+}
+
+.social-icon {
+    color: white;
+    opacity: 0.7;
+    transition: opacity 0.3s, transform 0.3s;
+}
+
+.social-icon:hover {
+    opacity: 1;
+    transform: translateY(-3px);
+}
+
 /* Portfolio Pages Styles */
 .portfolio-container {
     margin-top: 120px;
-    padding: 0 40px 40px;
-    max-width: 1200px;
+    padding: 0 10px 40px;
+    max-width: 100%;
+    width: calc(100% - 20px);
     margin-left: auto;
     margin-right: auto;
 }
@@ -166,11 +196,11 @@ body {
     text-align: center;
 }
 
-/* Gallery Grid for Portfolio Pages */
+/* Gallery Grid for Portfolio Pages with Randomized Sizes */
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    gap: 20px;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 10px;
 }
 
 .gallery-item {
@@ -179,7 +209,8 @@ body {
     border-radius: 8px;
     transition: transform 0.3s ease;
     cursor: pointer;
-    aspect-ratio: 1 / 1;
+    grid-column: span var(--span, 4); /* Default span 4 columns, will be randomized */
+    aspect-ratio: var(--ratio, 1); /* Default 1:1 ratio, will be randomized */
 }
 
 .gallery-item img {
@@ -224,8 +255,8 @@ body {
 /* Technical page styles */
 .technical-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
-    gap: 30px;
+    grid-template-columns: repeat(12, 1fr);
+    gap: 15px;
 }
 
 .technical-item {
@@ -235,6 +266,7 @@ body {
     border-radius: 8px;
     overflow: hidden;
     transition: transform 0.3s ease;
+    grid-column: span var(--span, 6); /* Default span 6 columns, will be randomized */
 }
 
 .technical-item:hover {
@@ -383,11 +415,11 @@ button[type="submit"]:hover {
 /* Responsive styles */
 @media (max-width: 1024px) {
     .gallery-grid {
-        grid-template-columns: repeat(2, 1fr);
+        grid-template-columns: repeat(6, 1fr);
     }
     
     .technical-grid {
-        grid-template-columns: 1fr;
+        grid-template-columns: repeat(6, 1fr);
     }
     
     .contact-container {
@@ -415,6 +447,10 @@ button[type="submit"]:hover {
     }
     
     .gallery-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+    
+    .technical-grid {
         grid-template-columns: 1fr;
     }
     
@@ -429,6 +465,6 @@ button[type="submit"]:hover {
     
     .portfolio-container {
         margin-top: 150px;
-        padding: 0 20px 20px;
+        padding: 0 10px 20px;
     }
 }
