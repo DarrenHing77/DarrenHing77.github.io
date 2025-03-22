@@ -93,8 +93,25 @@
                 return;
             }
             
-            // Node and connection data
-            const nodeSize = 230; // Increased by 50% from 154px
+            // Get gallery dimensions
+            const galleryRect = gallery.getBoundingClientRect();
+            const galleryWidth = galleryRect.width;
+            const galleryHeight = galleryRect.height || window.innerHeight - 140;
+            
+            // Responsive node sizing - scale nodes based on available space
+            const baseNodeSize = 230; // Original large size
+            
+            // Calculate the minimum dimension (width or height)
+            const minDimension = Math.min(galleryWidth, galleryHeight);
+            
+            // If screen is too small, scale the node size down proportionally
+            // We'll use 6 as a divisor since we want to fit about 5-6 nodes horizontally
+            let nodeSize = Math.min(baseNodeSize, minDimension / 6);
+            
+            // Make sure nodes don't get too small
+            nodeSize = Math.max(nodeSize, 100);
+            
+            console.log(`Gallery size: ${galleryWidth}x${galleryHeight}, Node size: ${nodeSize}`);
             
             // Image paths with fallback colors
             const nodeImages = [
@@ -102,7 +119,7 @@
                 {path: "media/P_Rick01.jpg", color: "#9370db"},
                 {path: "media/The-Smeds-and-the-Smoos.jpeg", color: "#00ced1"},
                 {path: "media/zog01.jpg", color: "#32cd32"},
-                {path: "media/Carnage01.jpg", color: "#1e90ff"},
+                {path: "media/Carnage_Wlde_Eevee.jpg", color: "#1e90ff"},
                 {path: "media/HighwayRat01.jpg", color: "#ff7f50"},
                 {path: "media/Nazgul_Full_v002.jpg", color: "#9932cc"},
                 {path: "media/Revolting-Rhymes-Wolf.jpg", color: "#ffd700"},
@@ -123,27 +140,23 @@
             // Clear gallery container
             gallery.innerHTML = '';
             
-            // Get gallery dimensions
-            const galleryRect = gallery.getBoundingClientRect();
-            const galleryWidth = galleryRect.width;
-            const galleryHeight = Math.max(500, galleryRect.height);
-            
-            // Create positions for nodes
+            // Calculate positions for nodes - using relative positioning based on nodeSize
+            // This ensures nodes are properly spaced regardless of their size
             const nodePositions = [
-                {x: galleryWidth * 0.05, y: galleryHeight * 0.2},  // Node 1 - left edge
-                {x: galleryWidth * 0.25, y: galleryHeight * 0.15}, // Node 2
-                {x: galleryWidth * 0.45, y: galleryHeight * 0.2},  // Node 3
-                {x: galleryWidth * 0.65, y: galleryHeight * 0.15}, // Node 4
-                {x: galleryWidth * 0.85, y: galleryHeight * 0.2},  // Node 5 - right edge
+                {x: galleryWidth * 0.05, y: galleryHeight * 0.15},  // Node 1 - left edge
+                {x: galleryWidth * 0.23, y: galleryHeight * 0.10}, // Node 2
+                {x: galleryWidth * 0.43, y: galleryHeight * 0.15},  // Node 3
+                {x: galleryWidth * 0.63, y: galleryHeight * 0.10}, // Node 4
+                {x: Math.min(galleryWidth - nodeSize - 20, galleryWidth * 0.83), y: galleryHeight * 0.15},  // Node 5 - right edge
                 
-                {x: galleryWidth * 0.15, y: galleryHeight * 0.45}, // Node 6
-                {x: galleryWidth * 0.35, y: galleryHeight * 0.5},  // Node 7
-                {x: galleryWidth * 0.55, y: galleryHeight * 0.45}, // Node 8
-                {x: galleryWidth * 0.75, y: galleryHeight * 0.5},  // Node 9
-                {x: galleryWidth * 0.95 - nodeSize, y: galleryHeight * 0.45}, // Node 10 - right edge
+                {x: galleryWidth * 0.13, y: galleryHeight * 0.45}, // Node 6
+                {x: galleryWidth * 0.33, y: galleryHeight * 0.50},  // Node 7
+                {x: galleryWidth * 0.53, y: galleryHeight * 0.45}, // Node 8
+                {x: galleryWidth * 0.73, y: galleryHeight * 0.50},  // Node 9
+                {x: Math.min(galleryWidth - nodeSize - 20, galleryWidth * 0.90), y: galleryHeight * 0.45}, // Node 10 - right edge
                 
-                {x: galleryWidth * 0.2, y: galleryHeight * 0.75},  // Node 11
-                {x: galleryWidth * 0.8, y: galleryHeight * 0.75}   // Node 12
+                {x: galleryWidth * 0.23, y: Math.min(galleryHeight - nodeSize - 20, galleryHeight * 0.8)},  // Node 11
+                {x: galleryWidth * 0.73, y: Math.min(galleryHeight - nodeSize - 20, galleryHeight * 0.8)}   // Node 12
             ];
             
             // Create nodes and store them
