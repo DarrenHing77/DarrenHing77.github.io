@@ -62,7 +62,6 @@
     </footer>
     
     <script>
-        // Dropdown menu functionality
         document.addEventListener("DOMContentLoaded", function () {
             initDropdownMenu();
             initGallery();
@@ -84,23 +83,15 @@
         }
         
         function initGallery() {
-            console.log("Initializing Molecular Gallery");
+            console.log("Initializing Circuit Gallery");
             
             const gallery = document.getElementById("gallery");
+            if (!gallery) return;
             
-            if (!gallery) {
-                console.error("Gallery element not found!");
-                return;
-            }
-            
-            // Get gallery dimensions
             const galleryRect = gallery.getBoundingClientRect();
-            const galleryWidth = galleryRect.width;
+            const galleryWidth = galleryRect.width || 800;
             const galleryHeight = galleryRect.height || window.innerHeight - 140;
             
-            console.log(`Gallery size: ${galleryWidth}x${galleryHeight}`);
-            
-            // Image paths with fallback colors
             const nodeImages = [
                 {path: "media/orcKing01.jpg", color: "#ff69b4"},
                 {path: "media/P_Rick01.jpg", color: "#9370db"},
@@ -111,183 +102,287 @@
                 {path: "media/Nazgul_Full_v002.jpg", color: "#9932cc"},
                 {path: "media/Revolting-Rhymes-Wolf.jpg", color: "#ffd700"},
                 {path: "media/SpaceMarines_UE.jpeg", color: "#00ff7f"},
-                {path: "media/StickMan_Sc&S_h1.jpg", color: "#ff4500"},
-                {path: "media/placeholder1.jpg", color: "#4169e1"},
-                {path: "media/placeholder2.jpg", color: "#8a2be2"}
+                {path: "media/StickMan_Sc&S_h1.jpg", color: "#ff4500"}
             ];
             
-            // Clear gallery
             gallery.innerHTML = '';
             
-            // Create organic node positions
+            // Node size - much bigger now
+            const nodeSize = 160;
+            
+            // Node positions - spread out to accommodate larger nodes
             const nodes = [
-                {id: 0, x: galleryWidth * 0.15, y: galleryHeight * 0.2, size: 'large'},
-                {id: 1, x: galleryWidth * 0.25, y: galleryHeight * 0.35, size: 'medium'},
-                {id: 2, x: galleryWidth * 0.1, y: galleryHeight * 0.5, size: 'small'},
-                {id: 3, x: galleryWidth * 0.45, y: galleryHeight * 0.15, size: 'large'},
-                {id: 4, x: galleryWidth * 0.55, y: galleryHeight * 0.3, size: 'medium'},
-                {id: 5, x: galleryWidth * 0.4, y: galleryHeight * 0.45, size: 'small'},
-                {id: 6, x: galleryWidth * 0.35, y: galleryHeight * 0.65, size: 'medium'},
-                {id: 7, x: galleryWidth * 0.75, y: galleryHeight * 0.25, size: 'large'},
-                {id: 8, x: galleryWidth * 0.8, y: galleryHeight * 0.45, size: 'small'},
-                {id: 9, x: galleryWidth * 0.2, y: galleryHeight * 0.8, size: 'medium'},
-                {id: 10, x: galleryWidth * 0.45, y: galleryHeight * 0.85, size: 'small'},
-                {id: 11, x: galleryWidth * 0.7, y: galleryHeight * 0.7, size: 'small'}
+                {id: 0, x: galleryWidth * 0.05, y: galleryHeight * 0.08},
+                {id: 1, x: galleryWidth * 0.28, y: galleryHeight * 0.05},
+                {id: 2, x: galleryWidth * 0.55, y: galleryHeight * 0.08},
+                {id: 3, x: galleryWidth * 0.80, y: galleryHeight * 0.12},
+                {id: 4, x: galleryWidth * 0.08, y: galleryHeight * 0.42},
+                {id: 5, x: galleryWidth * 0.38, y: galleryHeight * 0.35},
+                {id: 6, x: galleryWidth * 0.68, y: galleryHeight * 0.40},
+                {id: 7, x: galleryWidth * 0.18, y: galleryHeight * 0.72},
+                {id: 8, x: galleryWidth * 0.50, y: galleryHeight * 0.68},
+                {id: 9, x: galleryWidth * 0.78, y: galleryHeight * 0.72}
             ];
             
-            // Simple connections
-            const connections = [
-                {from: 0, to: 1, type: 'double'},
-                {from: 1, to: 2, type: 'single'},
-                {from: 1, to: 3, type: 'single'},
-                {from: 3, to: 4, type: 'triple'},
-                {from: 4, to: 5, type: 'double'},
-                {from: 5, to: 6, type: 'single'},
-                {from: 3, to: 7, type: 'single'},
-                {from: 7, to: 8, type: 'single'},
-                {from: 6, to: 9, type: 'single'},
-                {from: 9, to: 10, type: 'double'},
-                {from: 8, to: 11, type: 'single'},
-                {from: 10, to: 11, type: 'single'}
-            ];
+            // Connection threshold - nodes within this distance will connect
+            const connectionThreshold = galleryWidth * 0.45;
             
-            // Draw bonds first
-            connections.forEach(conn => {
-                const fromNode = nodes[conn.from];
-                const toNode = nodes[conn.to];
-                
-                const fromCenterX = fromNode.x + (fromNode.size === 'large' ? 35 : fromNode.size === 'medium' ? 25 : 17.5);
-                const fromCenterY = fromNode.y + (fromNode.size === 'large' ? 35 : fromNode.size === 'medium' ? 25 : 17.5);
-                const toCenterX = toNode.x + (toNode.size === 'large' ? 35 : toNode.size === 'medium' ? 25 : 17.5);
-                const toCenterY = toNode.y + (toNode.size === 'large' ? 35 : toNode.size === 'medium' ? 25 : 17.5);
-                
-                const dx = toCenterX - fromCenterX;
-                const dy = toCenterY - fromCenterY;
-                const length = Math.sqrt(dx * dx + dy * dy);
-                const angle = Math.atan2(dy, dx);
-                
-                const bond = document.createElement("div");
-                bond.style.position = "absolute";
-                bond.style.left = `${fromCenterX}px`;
-                bond.style.top = `${fromCenterY}px`;
-                bond.style.width = `${length}px`;
-                bond.style.transform = `rotate(${angle}rad)`;
-                bond.style.transformOrigin = "left center";
-                bond.style.background = "linear-gradient(to right, rgba(255,255,255,0.6), rgba(30,144,255,0.6))";
-                bond.style.borderRadius = "1px";
-                bond.style.zIndex = "1";
-                bond.style.boxShadow = "0 0 8px rgba(30, 144, 255, 0.3)";
-                bond.style.transition = "all 0.3s ease";
-                
-                // Bond thickness
-                if (conn.type === 'single') bond.style.height = "3px";
-                if (conn.type === 'double') bond.style.height = "5px";
-                if (conn.type === 'triple') bond.style.height = "7px";
-                
-                gallery.appendChild(bond);
-                
-                // Store for hover effects
-                fromNode.connections = fromNode.connections || [];
-                toNode.connections = toNode.connections || [];
-                fromNode.connections.push({bond, other: toNode});
-                toNode.connections.push({bond, other: fromNode});
-            });
+            function getCenter(node) {
+                return { x: node.x + nodeSize/2, y: node.y + nodeSize/2 };
+            }
             
-            // Create nodes
-            nodes.forEach((node, i) => {
-                const nodeEl = document.createElement("div");
-                nodeEl.style.position = "absolute";
-                nodeEl.style.left = `${node.x}px`;
-                nodeEl.style.top = `${node.y}px`;
-                nodeEl.style.background = "radial-gradient(circle, #1e90ff, #0066cc)";
-                nodeEl.style.border = "3px solid rgba(255,255,255,0.8)";
-                nodeEl.style.borderRadius = "50%";
-                nodeEl.style.display = "flex";
-                nodeEl.style.alignItems = "center";
-                nodeEl.style.justifyContent = "center";
-                nodeEl.style.fontWeight = "bold";
-                nodeEl.style.color = "white";
-                nodeEl.style.transition = "all 0.3s ease";
-                nodeEl.style.cursor = "pointer";
-                nodeEl.style.boxShadow = "0 0 15px rgba(30, 144, 255, 0.4)";
-                nodeEl.style.zIndex = "10";
-                nodeEl.style.overflow = "hidden";
+            // Draw 45-degree angled circuit connection (PCB style)
+            function drawCircuitConnection(fromNode, toNode) {
+                const from = getCenter(fromNode);
+                const to = getCenter(toNode);
+                const elements = [];
                 
-                // Size based on node type
-                if (node.size === 'large') {
-                    nodeEl.style.width = "120px";
-                    nodeEl.style.height = "120px";
-                    nodeEl.style.fontSize = "18px";
-                } else if (node.size === 'medium') {
-                    nodeEl.style.width = "90px";
-                    nodeEl.style.height = "90px";
-                    nodeEl.style.fontSize = "16px";
-                } else {
-                    nodeEl.style.width = "65px";
-                    nodeEl.style.height = "65px";
-                    nodeEl.style.fontSize = "14px";
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
+                
+                // Create a line segment
+                function createLine(x1, y1, x2, y2) {
+                    const line = document.createElement("div");
+                    line.className = "circuit-line";
+                    const length = Math.hypot(x2 - x1, y2 - y1);
+                    const angle = Math.atan2(y2 - y1, x2 - x1);
+                    line.style.cssText = `
+                        position: absolute;
+                        height: 4px;
+                        background: linear-gradient(90deg, rgba(0,255,255,0.9), rgba(30,144,255,0.7));
+                        box-shadow: 0 0 10px rgba(0,255,255,0.6), 0 0 3px rgba(0,255,255,1);
+                        z-index: 1;
+                        transition: all 0.3s ease;
+                        transform-origin: left center;
+                    `;
+                    line.style.left = `${x1}px`;
+                    line.style.top = `${y1 - 2}px`;
+                    line.style.width = `${length}px`;
+                    line.style.transform = `rotate(${angle}rad)`;
+                    gallery.appendChild(line);
+                    return line;
                 }
                 
-                // Try to add image
+                // Create corner junction
+                function createCorner(x, y) {
+                    const corner = document.createElement("div");
+                    corner.className = "circuit-corner";
+                    corner.style.cssText = `
+                        position: absolute;
+                        width: 10px;
+                        height: 10px;
+                        background: radial-gradient(circle, #00ffff, #0088ff);
+                        border-radius: 50%;
+                        box-shadow: 0 0 12px rgba(0,255,255,0.9), 0 0 4px rgba(0,255,255,1);
+                        z-index: 2;
+                        transition: all 0.3s ease;
+                    `;
+                    corner.style.left = `${x - 5}px`;
+                    corner.style.top = `${y - 5}px`;
+                    gallery.appendChild(corner);
+                    return corner;
+                }
+                
+                // Calculate 45-degree routing
+                // Route: horizontal/vertical -> 45° diagonal -> horizontal/vertical
+                const diagonalLength = Math.min(absDx, absDy);
+                const straightLength = Math.abs(absDx - absDy);
+                
+                if (diagonalLength < 20) {
+                    // Too short for proper 45° routing, just draw direct line
+                    elements.push(createLine(from.x, from.y, to.x, to.y));
+                } else if (absDx > absDy) {
+                    // More horizontal: H -> 45° -> H or just H -> 45°
+                    const dirX = dx > 0 ? 1 : -1;
+                    const dirY = dy > 0 ? 1 : -1;
+                    
+                    // First horizontal segment
+                    const h1Length = straightLength / 2;
+                    const midX1 = from.x + h1Length * dirX;
+                    if (h1Length > 10) {
+                        elements.push(createLine(from.x, from.y, midX1, from.y));
+                        elements.push(createCorner(midX1, from.y));
+                    }
+                    
+                    // 45-degree diagonal
+                    const diagEndX = midX1 + diagonalLength * dirX;
+                    const diagEndY = from.y + diagonalLength * dirY;
+                    elements.push(createLine(h1Length > 10 ? midX1 : from.x, from.y, diagEndX, diagEndY));
+                    elements.push(createCorner(diagEndX, diagEndY));
+                    
+                    // Second horizontal segment
+                    if (h1Length > 10) {
+                        elements.push(createLine(diagEndX, diagEndY, to.x, to.y));
+                    }
+                } else {
+                    // More vertical: V -> 45° -> V or just V -> 45°
+                    const dirX = dx > 0 ? 1 : -1;
+                    const dirY = dy > 0 ? 1 : -1;
+                    
+                    // First vertical segment
+                    const v1Length = straightLength / 2;
+                    const midY1 = from.y + v1Length * dirY;
+                    if (v1Length > 10) {
+                        elements.push(createLine(from.x, from.y, from.x, midY1));
+                        elements.push(createCorner(from.x, midY1));
+                    }
+                    
+                    // 45-degree diagonal
+                    const diagEndX = from.x + diagonalLength * dirX;
+                    const diagEndY = midY1 + diagonalLength * dirY;
+                    elements.push(createLine(from.x, v1Length > 10 ? midY1 : from.y, diagEndX, diagEndY));
+                    elements.push(createCorner(diagEndX, diagEndY));
+                    
+                    // Second vertical segment
+                    if (v1Length > 10) {
+                        elements.push(createLine(diagEndX, diagEndY, to.x, to.y));
+                    }
+                }
+                
+                return elements;
+            }
+            
+            // Build proximity-based connections - nodes connect to their nearest neighbors
+            const connectionPairs = [];
+            for (let i = 0; i < nodes.length; i++) {
+                const distances = [];
+                for (let j = 0; j < nodes.length; j++) {
+                    if (i === j) continue;
+                    const ci = getCenter(nodes[i]);
+                    const cj = getCenter(nodes[j]);
+                    const dist = Math.hypot(cj.x - ci.x, cj.y - ci.y);
+                    if (dist < connectionThreshold) {
+                        distances.push({j, dist});
+                    }
+                }
+                // Connect to 2-3 nearest neighbors
+                distances.sort((a, b) => a.dist - b.dist);
+                distances.slice(0, 3).forEach(d => {
+                    const pair = [Math.min(i, d.j), Math.max(i, d.j)].join('-');
+                    if (!connectionPairs.includes(pair)) {
+                        connectionPairs.push(pair);
+                    }
+                });
+            }
+            
+            // Draw all connections first (behind nodes)
+            connectionPairs.forEach(pair => {
+                const [i, j] = pair.split('-').map(Number);
+                const elements = drawCircuitConnection(nodes[i], nodes[j]);
+                
+                nodes[i].connectionElements = nodes[i].connectionElements || [];
+                nodes[j].connectionElements = nodes[j].connectionElements || [];
+                nodes[i].connectionElements.push(...elements);
+                nodes[j].connectionElements.push(...elements);
+                nodes[i].connectedNodes = nodes[i].connectedNodes || [];
+                nodes[j].connectedNodes = nodes[j].connectedNodes || [];
+                nodes[i].connectedNodes.push(nodes[j]);
+                nodes[j].connectedNodes.push(nodes[i]);
+            });
+            
+            // Create nodes (on top of connections)
+            nodes.forEach((node, i) => {
+                const nodeEl = document.createElement("div");
+                nodeEl.style.cssText = `
+                    position: absolute;
+                    left: ${node.x}px;
+                    top: ${node.y}px;
+                    width: ${nodeSize}px;
+                    height: ${nodeSize}px;
+                    border: 5px solid rgba(0,255,255,0.8);
+                    border-radius: 50%;
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
+                    transition: all 0.3s ease;
+                    cursor: pointer;
+                    box-shadow: 0 0 25px rgba(0,255,255,0.5), 0 0 50px rgba(30,144,255,0.3), inset 0 0 40px rgba(0,0,0,0.4);
+                    z-index: 10;
+                    overflow: hidden;
+                    background: radial-gradient(circle at 30% 30%, rgba(0,255,255,0.2), rgba(30,144,255,0.1), transparent);
+                `;
+                
                 const img = document.createElement("img");
                 img.src = nodeImages[i].path;
                 img.alt = "Gallery artwork";
-                img.style.width = "100%";
-                img.style.height = "100%";
-                img.style.objectFit = "cover";
-                img.style.borderRadius = "50%";
-                img.style.display = "block";
+                img.style.cssText = `
+                    width: 100%;
+                    height: 100%;
+                    object-fit: cover;
+                    border-radius: 50%;
+                    display: block;
+                `;
                 
                 img.onerror = function() {
-                    nodeEl.style.backgroundColor = nodeImages[i].color;
-                    if (nodeEl.contains(img)) {
-                        nodeEl.removeChild(img);
-                    }
+                    nodeEl.style.background = `radial-gradient(circle at 30% 30%, ${nodeImages[i].color}, rgba(0,0,0,0.5))`;
+                    if (nodeEl.contains(img)) nodeEl.removeChild(img);
                 };
                 
                 nodeEl.appendChild(img);
                 gallery.appendChild(nodeEl);
-                
-                // Store element reference
                 node.element = nodeEl;
                 
-                // Add hover effects
+                // Hover effects
                 nodeEl.addEventListener("mouseenter", () => {
-                    nodeEl.style.transform = "scale(1.2)";
-                    nodeEl.style.boxShadow = "0 0 25px rgba(30, 144, 255, 0.7)";
-                    nodeEl.style.borderColor = "#fff";
-                    nodeEl.style.borderWidth = "4px";
+                    nodeEl.style.transform = "scale(1.12)";
+                    nodeEl.style.boxShadow = "0 0 40px rgba(0,255,255,1), 0 0 80px rgba(30,144,255,0.6), inset 0 0 40px rgba(0,0,0,0.4)";
+                    nodeEl.style.borderColor = "#00ffff";
+                    nodeEl.style.borderWidth = "6px";
                     nodeEl.style.zIndex = "20";
                     
-                    // Highlight connections
-                    if (node.connections) {
-                        node.connections.forEach(conn => {
-                            conn.bond.style.filter = "brightness(1.5)";
-                            conn.other.element.style.borderColor = "#1e90ff";
-                            conn.other.element.style.borderWidth = "4px";
+                    // Highlight connected lines
+                    if (node.connectionElements) {
+                        node.connectionElements.forEach(el => {
+                            if (el.classList.contains('circuit-line')) {
+                                el.style.boxShadow = "0 0 20px rgba(0,255,255,1), 0 0 8px rgba(0,255,255,1)";
+                                el.style.background = "linear-gradient(90deg, #00ffff, #00ddff)";
+                            } else if (el.classList.contains('circuit-corner')) {
+                                el.style.boxShadow = "0 0 25px rgba(0,255,255,1), 0 0 10px rgba(0,255,255,1)";
+                                el.style.transform = "scale(1.3)";
+                            }
+                        });
+                    }
+                    // Highlight connected nodes
+                    if (node.connectedNodes) {
+                        node.connectedNodes.forEach(n => {
+                            n.element.style.borderColor = "#00ffff";
+                            n.element.style.boxShadow = "0 0 35px rgba(0,255,255,0.7), 0 0 60px rgba(30,144,255,0.4), inset 0 0 40px rgba(0,0,0,0.4)";
                         });
                     }
                 });
                 
                 nodeEl.addEventListener("mouseleave", () => {
                     nodeEl.style.transform = "";
-                    nodeEl.style.boxShadow = "0 0 15px rgba(30, 144, 255, 0.4)";
-                    nodeEl.style.borderColor = "rgba(255,255,255,0.8)";
-                    nodeEl.style.borderWidth = "3px";
+                    nodeEl.style.boxShadow = "0 0 25px rgba(0,255,255,0.5), 0 0 50px rgba(30,144,255,0.3), inset 0 0 40px rgba(0,0,0,0.4)";
+                    nodeEl.style.borderColor = "rgba(0,255,255,0.8)";
+                    nodeEl.style.borderWidth = "5px";
                     nodeEl.style.zIndex = "10";
                     
-                    // Reset connections
-                    if (node.connections) {
-                        node.connections.forEach(conn => {
-                            conn.bond.style.filter = "";
-                            conn.other.element.style.borderColor = "rgba(255,255,255,0.8)";
-                            conn.other.element.style.borderWidth = "3px";
+                    // Reset lines
+                    if (node.connectionElements) {
+                        node.connectionElements.forEach(el => {
+                            if (el.classList.contains('circuit-line')) {
+                                el.style.boxShadow = "0 0 10px rgba(0,255,255,0.6), 0 0 3px rgba(0,255,255,1)";
+                                el.style.background = "linear-gradient(90deg, rgba(0,255,255,0.9), rgba(30,144,255,0.7))";
+                            } else if (el.classList.contains('circuit-corner')) {
+                                el.style.boxShadow = "0 0 15px rgba(0,255,255,0.9), 0 0 5px rgba(0,255,255,1)";
+                                el.style.transform = "";
+                            }
+                        });
+                    }
+                    // Reset connected nodes
+                    if (node.connectedNodes) {
+                        node.connectedNodes.forEach(n => {
+                            n.element.style.borderColor = "rgba(0,255,255,0.8)";
+                            n.element.style.boxShadow = "0 0 25px rgba(0,255,255,0.5), 0 0 50px rgba(30,144,255,0.3), inset 0 0 40px rgba(0,0,0,0.4)";
                         });
                     }
                 });
             });
             
-            console.log("Molecular gallery created successfully");
+            console.log("Circuit gallery created with " + connectionPairs.length + " angular connections");
         }
     </script>
 </body>
