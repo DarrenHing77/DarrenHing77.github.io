@@ -92,6 +92,26 @@
             const galleryWidth = galleryRect.width || 800;
             const galleryHeight = galleryRect.height || window.innerHeight - 140;
             
+            // Responsive node size based on screen width
+            let nodeSize;
+            if (galleryWidth < 500) {
+                nodeSize = 100;
+            } else if (galleryWidth < 800) {
+                nodeSize = 130;
+            } else if (galleryWidth < 1200) {
+                nodeSize = 150;
+            } else {
+                nodeSize = 170;
+            }
+            
+            // Top padding to avoid header overlap
+            const topPadding = 40;
+            const sidePadding = 20;
+            
+            // Usable area after padding
+            const usableWidth = galleryWidth - sidePadding * 2 - nodeSize;
+            const usableHeight = galleryHeight - topPadding - 20 - nodeSize; // 20 bottom padding
+            
             const nodeImages = [
                 {path: "media/orcKing01.jpg", color: "#ff69b4"},
                 {path: "media/P_Rick01.jpg", color: "#9370db"},
@@ -107,34 +127,76 @@
             
             gallery.innerHTML = '';
             
-            // Node size - much bigger now
-            const nodeSize = 160;
-            
-            // Node positions - spread out to accommodate larger nodes
+            // Node positions using padded usable area
             const nodes = [
-                {id: 0, x: galleryWidth * 0.05, y: galleryHeight * 0.08},
-                {id: 1, x: galleryWidth * 0.28, y: galleryHeight * 0.05},
-                {id: 2, x: galleryWidth * 0.55, y: galleryHeight * 0.08},
-                {id: 3, x: galleryWidth * 0.80, y: galleryHeight * 0.12},
-                {id: 4, x: galleryWidth * 0.08, y: galleryHeight * 0.42},
-                {id: 5, x: galleryWidth * 0.38, y: galleryHeight * 0.35},
-                {id: 6, x: galleryWidth * 0.68, y: galleryHeight * 0.40},
-                {id: 7, x: galleryWidth * 0.18, y: galleryHeight * 0.72},
-                {id: 8, x: galleryWidth * 0.50, y: galleryHeight * 0.68},
-                {id: 9, x: galleryWidth * 0.78, y: galleryHeight * 0.72}
+                {id: 0, x: sidePadding + usableWidth * 0.02, y: topPadding + usableHeight * 0.05},
+                {id: 1, x: sidePadding + usableWidth * 0.25, y: topPadding + usableHeight * 0.0},
+                {id: 2, x: sidePadding + usableWidth * 0.52, y: topPadding + usableHeight * 0.05},
+                {id: 3, x: sidePadding + usableWidth * 0.80, y: topPadding + usableHeight * 0.10},
+                {id: 4, x: sidePadding + usableWidth * 0.05, y: topPadding + usableHeight * 0.38},
+                {id: 5, x: sidePadding + usableWidth * 0.35, y: topPadding + usableHeight * 0.32},
+                {id: 6, x: sidePadding + usableWidth * 0.65, y: topPadding + usableHeight * 0.38},
+                {id: 7, x: sidePadding + usableWidth * 0.15, y: topPadding + usableHeight * 0.70},
+                {id: 8, x: sidePadding + usableWidth * 0.48, y: topPadding + usableHeight * 0.65},
+                {id: 9, x: sidePadding + usableWidth * 0.78, y: topPadding + usableHeight * 0.72}
             ];
             
             // Connection threshold - nodes within this distance will connect
-            const connectionThreshold = galleryWidth * 0.45;
+            const connectionThreshold = Math.max(galleryWidth, galleryHeight) * 0.4;
+            
+            // Check if two line segments intersect
+            function segmentsIntersect(p1, p2, p3, p4) {
+                const ccw = (A, B, C) => (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
+                
+                // Check if segments share an endpoint (that's fine, not a cross)
+                const threshold = 5;
+                const shareEndpoint = (
+                    (Math.abs(p1.x - p3.x) < threshold && Math.abs(p1.y - p3.y) < threshold) ||
+                    (Math.abs(p1.x - p4.x) < threshold && Math.abs(p1.y - p4.y) < threshold) ||
+                    (Math.abs(p2.x - p3.x) < threshold && Math.abs(p2.y - p3.y) < threshold) ||
+                    (Math.abs(p2.x - p4.x) < threshold && Math.abs(p2.y - p4.y) < threshold)
+                );
+                if (shareEndpoint) return false;
+                
+                return (ccw(p1, p3, p4) !== ccw(p2, p3, p4)) && (ccw(p1, p2, p3) !== ccw(p1, p2, p4));
+            }
+            
+            // Check if a new connection would cross any existing ones
+            function wouldCrossExisting(fromNode, toNode, existingConnections) {
+                const newFrom = getCenter(fromNode);
+                const newTo = getCenter(toNode);
+                
+                for (const conn of existingConnections) {
+                    const existFrom = getCenter(conn.from);
+                    const existTo = getCenter(conn.to);
+                    if (segmentsIntersect(newFrom, newTo, existFrom, existTo)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            const connectionThreshold = Math.max(galleryWidth, galleryHeight) * 0.4;
             
             function getCenter(node) {
                 return { x: node.x + nodeSize/2, y: node.y + nodeSize/2 };
             }
             
+            // Get edge point of circle facing toward target
+            function getEdgePoint(fromNode, toNode) {
+                const fromCenter = getCenter(fromNode);
+                const toCenter = getCenter(toNode);
+                const angle = Math.atan2(toCenter.y - fromCenter.y, toCenter.x - fromCenter.x);
+                const radius = nodeSize / 2 + 5; // +5 for small gap from border
+                return {
+                    x: fromCenter.x + Math.cos(angle) * radius,
+                    y: fromCenter.y + Math.sin(angle) * radius
+                };
+            }
+            
             // Draw 45-degree angled circuit connection (PCB style)
             function drawCircuitConnection(fromNode, toNode) {
-                const from = getCenter(fromNode);
-                const to = getCenter(toNode);
+                const from = getEdgePoint(fromNode, toNode);
+                const to = getEdgePoint(toNode, fromNode);
                 const elements = [];
                 
                 const dx = to.x - from.x;
@@ -245,7 +307,10 @@
             }
             
             // Build proximity-based connections - nodes connect to their nearest neighbors
+            // Skip connections that would cross existing ones
             const connectionPairs = [];
+            const connectionData = []; // Store from/to for intersection checks
+            
             for (let i = 0; i < nodes.length; i++) {
                 const distances = [];
                 for (let j = 0; j < nodes.length; j++) {
@@ -257,14 +322,28 @@
                         distances.push({j, dist});
                     }
                 }
-                // Connect to 2-3 nearest neighbors
+                // Sort by distance and try to connect to nearest neighbors
                 distances.sort((a, b) => a.dist - b.dist);
-                distances.slice(0, 3).forEach(d => {
+                
+                let connectedCount = 0;
+                for (const d of distances) {
+                    if (connectedCount >= 2) break; // Max 2 connections per node in this pass
+                    
                     const pair = [Math.min(i, d.j), Math.max(i, d.j)].join('-');
-                    if (!connectionPairs.includes(pair)) {
-                        connectionPairs.push(pair);
+                    if (connectionPairs.includes(pair)) {
+                        connectedCount++; // Already connected
+                        continue;
                     }
-                });
+                    
+                    // Check if this would cross an existing connection
+                    if (wouldCrossExisting(nodes[i], nodes[d.j], connectionData)) {
+                        continue; // Skip this one, try next nearest
+                    }
+                    
+                    connectionPairs.push(pair);
+                    connectionData.push({from: nodes[i], to: nodes[d.j]});
+                    connectedCount++;
+                }
             }
             
             // Draw all connections first (behind nodes)
@@ -384,6 +463,13 @@
             
             console.log("Circuit gallery created with " + connectionPairs.length + " angular connections");
         }
+        
+        // Reinitialize on resize (debounced)
+        let resizeTimeout;
+        window.addEventListener('resize', function() {
+            clearTimeout(resizeTimeout);
+            resizeTimeout = setTimeout(initGallery, 250);
+        });
     </script>
 </body>
 </html>
