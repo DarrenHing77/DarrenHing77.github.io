@@ -144,6 +144,22 @@
             // Connection threshold - nodes within this distance will connect
             const connectionThreshold = Math.max(galleryWidth, galleryHeight) * 0.4;
             
+            function getCenter(node) {
+                return { x: node.x + nodeSize/2, y: node.y + nodeSize/2 };
+            }
+            
+            // Get edge point of circle facing toward target
+            function getEdgePoint(fromNode, toNode) {
+                const fromCenter = getCenter(fromNode);
+                const toCenter = getCenter(toNode);
+                const angle = Math.atan2(toCenter.y - fromCenter.y, toCenter.x - fromCenter.x);
+                const radius = nodeSize / 2 + 5; // +5 for small gap from border
+                return {
+                    x: fromCenter.x + Math.cos(angle) * radius,
+                    y: fromCenter.y + Math.sin(angle) * radius
+                };
+            }
+            
             // Check if two line segments intersect
             function segmentsIntersect(p1, p2, p3, p4) {
                 const ccw = (A, B, C) => (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
@@ -174,23 +190,6 @@
                     }
                 }
                 return false;
-            }
-            const connectionThreshold = Math.max(galleryWidth, galleryHeight) * 0.4;
-            
-            function getCenter(node) {
-                return { x: node.x + nodeSize/2, y: node.y + nodeSize/2 };
-            }
-            
-            // Get edge point of circle facing toward target
-            function getEdgePoint(fromNode, toNode) {
-                const fromCenter = getCenter(fromNode);
-                const toCenter = getCenter(toNode);
-                const angle = Math.atan2(toCenter.y - fromCenter.y, toCenter.x - fromCenter.x);
-                const radius = nodeSize / 2 + 5; // +5 for small gap from border
-                return {
-                    x: fromCenter.x + Math.cos(angle) * radius,
-                    y: fromCenter.y + Math.sin(angle) * radius
-                };
             }
             
             // Draw 45-degree angled circuit connection (PCB style)
