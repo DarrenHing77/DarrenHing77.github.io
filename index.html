@@ -190,6 +190,40 @@
                 return [line];
             }
 
+            // Check if line segment from node A to node B intersects with circle C
+            function lineIntersectsCircle(nodeA, nodeB, nodeC) {
+                const a = getCenter(nodeA);
+                const b = getCenter(nodeB);
+                const c = getCenter(nodeC);
+                const radius = nodeC.size / 2;
+
+                // Vector from A to B
+                const dx = b.x - a.x;
+                const dy = b.y - a.y;
+
+                // Vector from A to C
+                const fx = a.x - c.x;
+                const fy = a.y - c.y;
+
+                // Quadratic equation coefficients for line-circle intersection
+                const a_coef = dx * dx + dy * dy;
+                const b_coef = 2 * (fx * dx + fy * dy);
+                const c_coef = (fx * fx + fy * fy) - radius * radius;
+
+                const discriminant = b_coef * b_coef - 4 * a_coef * c_coef;
+
+                // No intersection if discriminant is negative
+                if (discriminant < 0) return false;
+
+                // Check if intersection points are within the line segment [0, 1]
+                const t1 = (-b_coef - Math.sqrt(discriminant)) / (2 * a_coef);
+                const t2 = (-b_coef + Math.sqrt(discriminant)) / (2 * a_coef);
+
+                // Intersection occurs if either t is between 0 and 1 (within segment)
+                // Use small margin (0.05, 0.95) to ignore near-endpoint intersections
+                return (t1 > 0.05 && t1 < 0.95) || (t2 > 0.05 && t2 < 0.95);
+            }
+
             // Build proximity-based connections
             const connectionPairs = [];
 
@@ -216,6 +250,19 @@
                         connectedCount++;
                         continue;
                     }
+
+                    // Check if this connection would cross through any other node
+                    let crossesNode = false;
+                    for (let k = 0; k < nodes.length; k++) {
+                        if (k === i || k === d.j) continue;
+                        if (lineIntersectsCircle(nodes[i], nodes[d.j], nodes[k])) {
+                            crossesNode = true;
+                            break;
+                        }
+                    }
+
+                    // Skip this connection if it crosses through another node
+                    if (crossesNode) continue;
 
                     connectionPairs.push(pair);
                     connectedCount++;
