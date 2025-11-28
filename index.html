@@ -83,231 +83,116 @@
         }
         
         function initGallery() {
-            console.log("Initializing Circuit Gallery");
-            
+            console.log("Initializing Molecular Gallery");
+
             const gallery = document.getElementById("gallery");
             if (!gallery) return;
-            
+
             const galleryRect = gallery.getBoundingClientRect();
             const galleryWidth = galleryRect.width || 800;
             const galleryHeight = galleryRect.height || window.innerHeight - 140;
-            
-            // Responsive node size based on screen width
-            let nodeSize;
+
+            // Base node size with responsive scaling
+            let baseNodeSize;
             if (galleryWidth < 500) {
-                nodeSize = 100;
+                baseNodeSize = 90;
             } else if (galleryWidth < 800) {
-                nodeSize = 130;
+                baseNodeSize = 110;
             } else if (galleryWidth < 1200) {
-                nodeSize = 150;
+                baseNodeSize = 130;
             } else {
-                nodeSize = 170;
+                baseNodeSize = 150;
             }
-            
+
             // Top padding to avoid header overlap
             const topPadding = 60;
             const sidePadding = 20;
-            
+
             // Usable area after padding
-            const usableWidth = galleryWidth - sidePadding * 2 - nodeSize;
-            const usableHeight = galleryHeight - topPadding - 20 - nodeSize; // 20 bottom padding
-            
+            const usableWidth = galleryWidth - sidePadding * 2 - baseNodeSize;
+            const usableHeight = galleryHeight - topPadding - 20 - baseNodeSize;
+
             const nodeImages = [
-                {path: "media/orcKing01.jpg", color: "#ff69b4"},
-                {path: "media/P_Rick01.jpg", color: "#9370db"},
-                {path: "media/The-Smeds-and-the-Smoos.jpeg", color: "#00ced1"},
-                {path: "media/zog01.jpg", color: "#32cd32"},
+                {path: "media/orcKing01.jpg", color: "#1e90ff"},
+                {path: "media/P_Rick01.jpg", color: "#1e90ff"},
+                {path: "media/The-Smeds-and-the-Smoos.jpeg", color: "#1e90ff"},
+                {path: "media/zog01.jpg", color: "#1e90ff"},
                 {path: "media/Carnage_Wlde_Eevee.jpg", color: "#1e90ff"},
-                {path: "media/HighwayRat01.jpg", color: "#ff7f50"},
-                {path: "media/Nazgul_Full_v002.jpg", color: "#9932cc"},
-                {path: "media/Revolting-Rhymes-Wolf.jpg", color: "#ffd700"},
-                {path: "media/SpaceMarines_UE.jpeg", color: "#00ff7f"},
-                {path: "media/StickMan_Sc&S_h1.jpg", color: "#ff4500"}
+                {path: "media/HighwayRat01.jpg", color: "#1e90ff"},
+                {path: "media/Nazgul_Full_v002.jpg", color: "#1e90ff"},
+                {path: "media/Revolting-Rhymes-Wolf.jpg", color: "#1e90ff"},
+                {path: "media/SpaceMarines_UE.jpeg", color: "#1e90ff"},
+                {path: "media/StickMan_Sc&S_h1.jpg", color: "#1e90ff"}
             ];
-            
+
             gallery.innerHTML = '';
-            
+
+            // Define size variance for each node (80% to 110% of base size)
+            const sizeVariances = [0.85, 1.05, 0.95, 1.1, 0.9, 1.0, 0.88, 1.08, 0.92, 1.03];
+
             // Node positions using padded usable area
             const nodes = [
-                {id: 0, x: sidePadding + usableWidth * 0.02, y: topPadding + usableHeight * 0.05},
-                {id: 1, x: sidePadding + usableWidth * 0.25, y: topPadding + usableHeight * 0.0},
-                {id: 2, x: sidePadding + usableWidth * 0.52, y: topPadding + usableHeight * 0.05},
-                {id: 3, x: sidePadding + usableWidth * 0.80, y: topPadding + usableHeight * 0.10},
-                {id: 4, x: sidePadding + usableWidth * 0.05, y: topPadding + usableHeight * 0.38},
-                {id: 5, x: sidePadding + usableWidth * 0.35, y: topPadding + usableHeight * 0.32},
-                {id: 6, x: sidePadding + usableWidth * 0.65, y: topPadding + usableHeight * 0.38},
-                {id: 7, x: sidePadding + usableWidth * 0.15, y: topPadding + usableHeight * 0.70},
-                {id: 8, x: sidePadding + usableWidth * 0.48, y: topPadding + usableHeight * 0.65},
-                {id: 9, x: sidePadding + usableWidth * 0.78, y: topPadding + usableHeight * 0.72}
+                {id: 0, x: sidePadding + usableWidth * 0.02, y: topPadding + usableHeight * 0.05, size: baseNodeSize * sizeVariances[0]},
+                {id: 1, x: sidePadding + usableWidth * 0.25, y: topPadding + usableHeight * 0.0, size: baseNodeSize * sizeVariances[1]},
+                {id: 2, x: sidePadding + usableWidth * 0.52, y: topPadding + usableHeight * 0.05, size: baseNodeSize * sizeVariances[2]},
+                {id: 3, x: sidePadding + usableWidth * 0.80, y: topPadding + usableHeight * 0.10, size: baseNodeSize * sizeVariances[3]},
+                {id: 4, x: sidePadding + usableWidth * 0.05, y: topPadding + usableHeight * 0.38, size: baseNodeSize * sizeVariances[4]},
+                {id: 5, x: sidePadding + usableWidth * 0.35, y: topPadding + usableHeight * 0.32, size: baseNodeSize * sizeVariances[5]},
+                {id: 6, x: sidePadding + usableWidth * 0.65, y: topPadding + usableHeight * 0.38, size: baseNodeSize * sizeVariances[6]},
+                {id: 7, x: sidePadding + usableWidth * 0.15, y: topPadding + usableHeight * 0.70, size: baseNodeSize * sizeVariances[7]},
+                {id: 8, x: sidePadding + usableWidth * 0.48, y: topPadding + usableHeight * 0.65, size: baseNodeSize * sizeVariances[8]},
+                {id: 9, x: sidePadding + usableWidth * 0.78, y: topPadding + usableHeight * 0.72, size: baseNodeSize * sizeVariances[9]}
             ];
-            
+
             // Connection threshold - nodes within this distance will connect
             const connectionThreshold = Math.max(galleryWidth, galleryHeight) * 0.5;
-            
+
             function getCenter(node) {
-                return { x: node.x + nodeSize/2, y: node.y + nodeSize/2 };
+                return { x: node.x + node.size/2, y: node.y + node.size/2 };
             }
-            
+
             // Get edge point of circle facing toward target
             function getEdgePoint(fromNode, toNode) {
                 const fromCenter = getCenter(fromNode);
                 const toCenter = getCenter(toNode);
                 const angle = Math.atan2(toCenter.y - fromCenter.y, toCenter.x - fromCenter.x);
-                const radius = nodeSize / 2 + 5; // +5 for small gap from border
+                const radius = fromNode.size / 2;
                 return {
                     x: fromCenter.x + Math.cos(angle) * radius,
                     y: fromCenter.y + Math.sin(angle) * radius
                 };
             }
-            
-            // Check if two line segments intersect
-            function segmentsIntersect(p1, p2, p3, p4) {
-                const ccw = (A, B, C) => (C.y - A.y) * (B.x - A.x) > (B.y - A.y) * (C.x - A.x);
-                
-                // Check if segments share an endpoint (that's fine, not a cross)
-                const threshold = 5;
-                const shareEndpoint = (
-                    (Math.abs(p1.x - p3.x) < threshold && Math.abs(p1.y - p3.y) < threshold) ||
-                    (Math.abs(p1.x - p4.x) < threshold && Math.abs(p1.y - p4.y) < threshold) ||
-                    (Math.abs(p2.x - p3.x) < threshold && Math.abs(p2.y - p3.y) < threshold) ||
-                    (Math.abs(p2.x - p4.x) < threshold && Math.abs(p2.y - p4.y) < threshold)
-                );
-                if (shareEndpoint) return false;
-                
-                return (ccw(p1, p3, p4) !== ccw(p2, p3, p4)) && (ccw(p1, p2, p3) !== ccw(p1, p2, p4));
-            }
-            
-            // Check if a new connection would cross any existing ones
-            function wouldCrossExisting(fromNode, toNode, existingConnections) {
-                const newFrom = getCenter(fromNode);
-                const newTo = getCenter(toNode);
-                
-                for (const conn of existingConnections) {
-                    const existFrom = getCenter(conn.from);
-                    const existTo = getCenter(conn.to);
-                    if (segmentsIntersect(newFrom, newTo, existFrom, existTo)) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-            
-            // Draw 45-degree angled circuit connection (PCB style)
-            function drawCircuitConnection(fromNode, toNode) {
+
+            // Draw simple molecular connection (straight line)
+            function drawMolecularConnection(fromNode, toNode) {
                 const from = getEdgePoint(fromNode, toNode);
                 const to = getEdgePoint(toNode, fromNode);
-                const elements = [];
-                
-                const dx = to.x - from.x;
-                const dy = to.y - from.y;
-                const absDx = Math.abs(dx);
-                const absDy = Math.abs(dy);
-                
-                // Create a line segment
-                function createLine(x1, y1, x2, y2) {
-                    const line = document.createElement("div");
-                    line.className = "circuit-line";
-                    const length = Math.hypot(x2 - x1, y2 - y1);
-                    const angle = Math.atan2(y2 - y1, x2 - x1);
-                    line.style.cssText = `
-                        position: absolute;
-                        height: 3px;
-                        background: white;
-                        z-index: 1;
-                        transition: all 0.3s ease;
-                        transform-origin: left center;
-                    `;
-                    line.style.left = `${x1}px`;
-                    line.style.top = `${y1 - 2}px`;
-                    line.style.width = `${length}px`;
-                    line.style.transform = `rotate(${angle}rad)`;
-                    gallery.appendChild(line);
-                    return line;
-                }
-                
-                // Create corner junction
-                function createCorner(x, y) {
-                    const corner = document.createElement("div");
-                    corner.className = "circuit-corner";
-                    corner.style.cssText = `
-                        position: absolute;
-                        width: 8px;
-                        height: 8px;
-                        background: white;
-                        border-radius: 50%;
-                        z-index: 2;
-                        transition: all 0.3s ease;
-                    `;
-                    corner.style.left = `${x - 5}px`;
-                    corner.style.top = `${y - 5}px`;
-                    gallery.appendChild(corner);
-                    return corner;
-                }
-                
-                // Calculate 45-degree routing
-                // Route: horizontal/vertical -> 45° diagonal -> horizontal/vertical
-                const diagonalLength = Math.min(absDx, absDy);
-                const straightLength = Math.abs(absDx - absDy);
-                
-                if (diagonalLength < 20) {
-                    // Too short for proper 45° routing, just draw direct line
-                    elements.push(createLine(from.x, from.y, to.x, to.y));
-                } else if (absDx > absDy) {
-                    // More horizontal: H -> 45° -> H or just H -> 45°
-                    const dirX = dx > 0 ? 1 : -1;
-                    const dirY = dy > 0 ? 1 : -1;
-                    
-                    // First horizontal segment
-                    const h1Length = straightLength / 2;
-                    const midX1 = from.x + h1Length * dirX;
-                    if (h1Length > 10) {
-                        elements.push(createLine(from.x, from.y, midX1, from.y));
-                        elements.push(createCorner(midX1, from.y));
-                    }
-                    
-                    // 45-degree diagonal
-                    const diagEndX = midX1 + diagonalLength * dirX;
-                    const diagEndY = from.y + diagonalLength * dirY;
-                    elements.push(createLine(h1Length > 10 ? midX1 : from.x, from.y, diagEndX, diagEndY));
-                    elements.push(createCorner(diagEndX, diagEndY));
-                    
-                    // Second horizontal segment
-                    if (h1Length > 10) {
-                        elements.push(createLine(diagEndX, diagEndY, to.x, to.y));
-                    }
-                } else {
-                    // More vertical: V -> 45° -> V or just V -> 45°
-                    const dirX = dx > 0 ? 1 : -1;
-                    const dirY = dy > 0 ? 1 : -1;
-                    
-                    // First vertical segment
-                    const v1Length = straightLength / 2;
-                    const midY1 = from.y + v1Length * dirY;
-                    if (v1Length > 10) {
-                        elements.push(createLine(from.x, from.y, from.x, midY1));
-                        elements.push(createCorner(from.x, midY1));
-                    }
-                    
-                    // 45-degree diagonal
-                    const diagEndX = from.x + diagonalLength * dirX;
-                    const diagEndY = midY1 + diagonalLength * dirY;
-                    elements.push(createLine(from.x, v1Length > 10 ? midY1 : from.y, diagEndX, diagEndY));
-                    elements.push(createCorner(diagEndX, diagEndY));
-                    
-                    // Second vertical segment
-                    if (v1Length > 10) {
-                        elements.push(createLine(diagEndX, diagEndY, to.x, to.y));
-                    }
-                }
-                
-                return elements;
+
+                const line = document.createElement("div");
+                line.className = "molecular-line";
+                const length = Math.hypot(to.x - from.x, to.y - from.y);
+                const angle = Math.atan2(to.y - from.y, to.x - from.x);
+                line.style.cssText = `
+                    position: absolute;
+                    height: 2px;
+                    background: #1e90ff;
+                    opacity: 0.6;
+                    z-index: 1;
+                    transition: all 0.3s ease;
+                    transform-origin: left center;
+                `;
+                line.style.left = `${from.x}px`;
+                line.style.top = `${from.y}px`;
+                line.style.width = `${length}px`;
+                line.style.transform = `rotate(${angle}rad)`;
+                gallery.appendChild(line);
+
+                return [line];
             }
-            
-            // Build proximity-based connections - nodes connect to their nearest neighbors
-            // Skip connections that would cross existing ones
+
+            // Build proximity-based connections
             const connectionPairs = [];
-            const connectionData = []; // Store from/to for intersection checks
-            
+
             for (let i = 0; i < nodes.length; i++) {
                 const distances = [];
                 for (let j = 0; j < nodes.length; j++) {
@@ -319,35 +204,29 @@
                         distances.push({j, dist});
                     }
                 }
-                // Sort by distance and try to connect to nearest neighbors
+                // Sort by distance and connect to nearest neighbors
                 distances.sort((a, b) => a.dist - b.dist);
-                
+
                 let connectedCount = 0;
                 for (const d of distances) {
-                    if (connectedCount >= 3) break; // Max 3 connections per node in this pass
-                    
+                    if (connectedCount >= 3) break; // Max 3 connections per node
+
                     const pair = [Math.min(i, d.j), Math.max(i, d.j)].join('-');
                     if (connectionPairs.includes(pair)) {
-                        connectedCount++; // Already connected
+                        connectedCount++;
                         continue;
                     }
-                    
-                    // Check if this would cross an existing connection
-                    if (wouldCrossExisting(nodes[i], nodes[d.j], connectionData)) {
-                        continue; // Skip this one, try next nearest
-                    }
-                    
+
                     connectionPairs.push(pair);
-                    connectionData.push({from: nodes[i], to: nodes[d.j]});
                     connectedCount++;
                 }
             }
-            
+
             // Draw all connections first (behind nodes)
             connectionPairs.forEach(pair => {
                 const [i, j] = pair.split('-').map(Number);
-                const elements = drawCircuitConnection(nodes[i], nodes[j]);
-                
+                const elements = drawMolecularConnection(nodes[i], nodes[j]);
+
                 nodes[i].connectionElements = nodes[i].connectionElements || [];
                 nodes[j].connectionElements = nodes[j].connectionElements || [];
                 nodes[i].connectionElements.push(...elements);
@@ -357,7 +236,7 @@
                 nodes[i].connectedNodes.push(nodes[j]);
                 nodes[j].connectedNodes.push(nodes[i]);
             });
-            
+
             // Create nodes (on top of connections)
             nodes.forEach((node, i) => {
                 const nodeEl = document.createElement("div");
@@ -365,9 +244,9 @@
                     position: absolute;
                     left: ${node.x}px;
                     top: ${node.y}px;
-                    width: ${nodeSize}px;
-                    height: ${nodeSize}px;
-                    border: 4px solid white;
+                    width: ${node.size}px;
+                    height: ${node.size}px;
+                    border: 3px solid #1e90ff;
                     border-radius: 50%;
                     display: flex;
                     align-items: center;
@@ -377,8 +256,9 @@
                     z-index: 10;
                     overflow: hidden;
                     background: transparent;
+                    box-shadow: 0 0 10px rgba(30, 144, 255, 0.3);
                 `;
-                
+
                 const img = document.createElement("img");
                 img.src = nodeImages[i].path;
                 img.alt = "Gallery artwork";
@@ -389,71 +269,63 @@
                     border-radius: 50%;
                     display: block;
                 `;
-                
+
                 img.onerror = function() {
                     nodeEl.style.background = `radial-gradient(circle at 30% 30%, ${nodeImages[i].color}, rgba(0,0,0,0.5))`;
                     if (nodeEl.contains(img)) nodeEl.removeChild(img);
                 };
-                
+
                 nodeEl.appendChild(img);
                 gallery.appendChild(nodeEl);
                 node.element = nodeEl;
-                
+
                 // Hover effects
                 nodeEl.addEventListener("mouseenter", () => {
-                    nodeEl.style.transform = "scale(1.12)";
-                    nodeEl.style.boxShadow = "0 0 30px rgba(255,255,255,0.8)";
-                    nodeEl.style.borderWidth = "5px";
+                    nodeEl.style.transform = "scale(1.15)";
+                    nodeEl.style.boxShadow = "0 0 30px rgba(30, 144, 255, 0.8)";
+                    nodeEl.style.borderWidth = "4px";
                     nodeEl.style.zIndex = "20";
 
                     // Highlight connected lines
                     if (node.connectionElements) {
                         node.connectionElements.forEach(el => {
-                            if (el.classList.contains('circuit-line')) {
-                                el.style.boxShadow = "0 0 15px rgba(255,255,255,0.8)";
-                            } else if (el.classList.contains('circuit-corner')) {
-                                el.style.boxShadow = "0 0 15px rgba(255,255,255,0.8)";
-                                el.style.transform = "scale(1.3)";
-                            }
+                            el.style.opacity = "1";
+                            el.style.height = "3px";
+                            el.style.boxShadow = "0 0 10px rgba(30, 144, 255, 0.8)";
                         });
                     }
                     // Highlight connected nodes
                     if (node.connectedNodes) {
                         node.connectedNodes.forEach(n => {
-                            n.element.style.boxShadow = "0 0 20px rgba(255,255,255,0.6)";
+                            n.element.style.boxShadow = "0 0 20px rgba(30, 144, 255, 0.6)";
                         });
                     }
                 });
-                
+
                 nodeEl.addEventListener("mouseleave", () => {
                     nodeEl.style.transform = "";
-                    nodeEl.style.boxShadow = "";
-                    nodeEl.style.borderColor = "white";
-                    nodeEl.style.borderWidth = "4px";
+                    nodeEl.style.boxShadow = "0 0 10px rgba(30, 144, 255, 0.3)";
+                    nodeEl.style.borderWidth = "3px";
                     nodeEl.style.zIndex = "10";
 
                     // Reset lines
                     if (node.connectionElements) {
                         node.connectionElements.forEach(el => {
-                            if (el.classList.contains('circuit-line')) {
-                                el.style.boxShadow = "";
-                            } else if (el.classList.contains('circuit-corner')) {
-                                el.style.boxShadow = "";
-                                el.style.transform = "";
-                            }
+                            el.style.opacity = "0.6";
+                            el.style.height = "2px";
+                            el.style.boxShadow = "";
                         });
                     }
                     // Reset connected nodes
                     if (node.connectedNodes) {
                         node.connectedNodes.forEach(n => {
-                            n.element.style.borderColor = "white";
-                            n.element.style.boxShadow = "";
+                            n.element.style.boxShadow = "0 0 10px rgba(30, 144, 255, 0.3)";
                         });
                     }
                 });
             });
-            
-            console.log("Circuit gallery created with " + connectionPairs.length + " angular connections");
+
+            console.log("Molecular gallery created with " + connectionPairs.length + " connections");
         }
         
         // Reinitialize on resize (debounced)
