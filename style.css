@@ -12,12 +12,6 @@ body {
     border: none;
 }
 
-/* Override to ensure no borders anywhere */
-.container, .gallery-container, .node, .line {
-    border-color: transparent;
-    outline: none;
-    box-shadow: none;
-}
 
 /* Header */
 .header {
@@ -98,11 +92,23 @@ body {
 .gallery-container {
     flex: 1;
     position: relative;
-    overflow: visible;
+    overflow: hidden;
     user-select: none;
     border: 1px solid rgba(255, 255, 255, 0.1);
     box-sizing: border-box;
     min-height: calc(100vh - 80px - 60px);
+}
+
+/* Molecular connection lines */
+.molecular-line {
+    position: absolute;
+    height: 2px;
+    background: #1e90ff;
+    opacity: 0.6;
+    z-index: 1;
+    transition: all 0.3s ease;
+    transform-origin: left center;
+    pointer-events: none;
 }
 
 /* Connections */
@@ -212,7 +218,7 @@ body {
 /* Gallery Grid for Portfolio Pages with Randomized Sizes */
 .gallery-grid {
     display: grid;
-    grid-template-columns: repeat(24, 1fr);
+    grid-template-columns: repeat(12, 1fr);
     gap: 10px;
     max-width: 1200px;
     margin: 0 auto;
@@ -224,8 +230,8 @@ body {
     border-radius: 8px;
     transition: transform 0.3s ease;
     cursor: pointer;
-    grid-column: span var(--span, 6); /* Default span 6 columns out of 24 total (scaled down from 12) */
-    aspect-ratio: var(--ratio, 1); /* Default 1:1 ratio, will be randomized */
+    grid-column: span var(--span, 6); /* Default span 6 columns out of 12 */
+    aspect-ratio: var(--ratio, 1);
 }
 
 .gallery-item img {
@@ -270,7 +276,7 @@ body {
 /* Technical page styles */
 .technical-grid {
     display: grid;
-    grid-template-columns: repeat(24, 1fr);
+    grid-template-columns: repeat(12, 1fr);
     gap: 15px;
     max-width: 1200px;
     margin: 0 auto;
@@ -283,7 +289,7 @@ body {
     border-radius: 8px;
     overflow: hidden;
     transition: transform 0.3s ease;
-    grid-column: span var(--span, 12); /* Default span 12 columns out of 24, will be randomized */
+    grid-column: span var(--span, 12); /* Default span 12 columns out of 12 (full width) */
 }
 
 .technical-item:hover {
@@ -407,6 +413,7 @@ body {
     border-radius: 4px;
     color: white;
     font-family: inherit;
+    box-sizing: border-box;
 }
 
 .form-group textarea {
