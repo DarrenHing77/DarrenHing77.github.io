@@ -311,6 +311,24 @@ body {
     margin-top: 0;
 }
 
+/* Tech tag pills */
+.tech-tags {
+    margin-top: 16px;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+}
+
+.tech-tag {
+    background: rgba(30, 144, 255, 0.15);
+    border: 1px solid rgba(30, 144, 255, 0.4);
+    color: #1e90ff;
+    padding: 3px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    white-space: nowrap;
+}
+
 /* Reels page styles */
 .video-container {
     display: grid;

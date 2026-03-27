@@ -30,34 +30,57 @@
         <h2 class="page-title">Technical Work</h2>
 
         <div class="technical-grid">
-            <div class="technical-item" style="--span: 7;">
-                <div class="technical-content">
-                    <h3>Advanced Shading Networks</h3>
-                    <p>Development of complex procedural shading networks for film production. Created custom node setups for realistic material representation including sub-surface scattering, displacement, and weathering effects.</p>
-                </div>
-            </div>
 
-            <div class="technical-item" style="--span: 5;">
-                <div class="technical-content">
-                    <h3>Look Development Pipeline</h3>
-                    <p>Streamlined look development workflow by creating custom tools that improved asset integration between departments. Implemented quality control checkpoints to ensure visual consistency across sequences.</p>
-                </div>
-            </div>
-
-            <div class="technical-item" style="--span: 6;">
-                <div class="technical-content">
-                    <h3>Lighting Optimisation</h3>
-                    <p>Developed efficient lighting setups for complex scenes by balancing visual quality with render time constraints. Created reusable lighting templates that maintained consistent looks while significantly reducing setup time.</p>
-                </div>
-            </div>
-
+            <!-- Automatty -->
             <div class="technical-item" style="--span: 12;">
                 <div class="technical-content">
-                    <h3>Production Tools &amp; Automation</h3>
-                    <p>Created custom tools that automated repetitive tasks, reducing artist workload and standardising outputs. These tools integrated with existing pipeline systems and improved both efficiency and output quality.</p>
-                    <p>The suite includes shelf tools for common operations, standalone Python applications, and a node-based workflow system that helps artists maintain consistency across shots and sequences.</p>
+                    <h3>Automatty &mdash; Unreal Engine Material Plugin</h3>
+                    <p>A C++ Unreal Engine plugin with a Python automation layer that streamlines the full material creation and assignment workflow. Automatty presents a texture import dialog, regex-matches filenames against standard PBR slot conventions (BaseColor, Normal, Roughness, Metallic, ORM, and more), and automatically builds material instances from a configurable base material &mdash; reducing what would otherwise be a repetitive manual process down to a single operation.</p>
+                    <p>Built and compiled for UE5 (5.6.1) using RunUAT/BuildPlugin.</p>
+                    <p class="tech-tags">
+                        <span class="tech-tag">Unreal Engine 5</span>
+                        <span class="tech-tag">C++</span>
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">PBR</span>
+                        <span class="tech-tag">Material Pipeline</span>
+                    </p>
                 </div>
             </div>
+
+            <!-- Houdini Tools -->
+            <div class="technical-item" style="--span: 7;">
+                <div class="technical-content">
+                    <h3>Houdini Python Tools</h3>
+                    <p>A suite of shelf tools and Python scripts that automate texture and material workflows inside Houdini.</p>
+                    <p><strong>Texture Auto-Mapper</strong> &mdash; Selects nodes, launches a file picker, then regex-matches texture filenames to shader parameters with fuzzy name matching. Handles UDIM sequences automatically, converting <code>.1001.</code> notation to <code>.&lt;UDIM&gt;.</code> on the fly.</p>
+                    <p><strong>UDIM Tag Standardizer</strong> &mdash; Enforces consistent UDIM tagging conventions across assets and projects.</p>
+                    <p><strong>Material Parameter Editor</strong> &mdash; A PySide2 UI tool (blue <code>#0d3c87</code> theme) for batch-editing material parameters across a LOPs/Solaris material library.</p>
+                    <p class="tech-tags">
+                        <span class="tech-tag">Houdini</span>
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">PySide2</span>
+                        <span class="tech-tag">LOPs / Solaris</span>
+                        <span class="tech-tag">UDIM</span>
+                    </p>
+                </div>
+            </div>
+
+            <!-- Blender DH Toolkit -->
+            <div class="technical-item" style="--span: 5;">
+                <div class="technical-content">
+                    <h3>Blender DH Toolkit</h3>
+                    <p>A custom Blender addon built around a context-sensitive pie menu, keymapped and configurable via addon preferences. The toolkit consolidates common artist operations into fast, muscle-memory-friendly access.</p>
+                    <p>Includes a Weight Paint menu, Display menu (wireframe toggle, viewport visibility, shader editor shortcuts), viewport background controls, and a custom shortcut key setter. A custom icon system (<code>load_icons</code>) handles all iconography. The Material Shader Builder uses regex-based texture matching with user-defined naming pattern preferences.</p>
+                    <p>Maintained across Blender 4.4 &rarr; 4.5, navigating API breaking changes introduced in 4.5.</p>
+                    <p class="tech-tags">
+                        <span class="tech-tag">Blender</span>
+                        <span class="tech-tag">Python</span>
+                        <span class="tech-tag">Addon / Pie Menu</span>
+                        <span class="tech-tag">Regex</span>
+                    </p>
+                </div>
+            </div>
+
         </div>
     </div>
 
