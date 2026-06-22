@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Darren Hing Design</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="/style.css">
 </head>
 <body>
@@ -26,7 +29,15 @@
         </nav>
     </div>
 
-    <div class="container">
+    <section class="hero">
+        <div class="gallery-container" id="gallery"></div>
+        <div class="scroll-cue" aria-hidden="true">
+            <span>scroll</span>
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none"><path d="M6 9l6 6 6-6" stroke="#1e90ff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        </div>
+    </section>
+
+    <section class="intro-reveal">
         <div class="bio">
             <h2>Lookdev Artist<br>Lighting Artist<br>Illustrator</h2>
             <p>
@@ -35,8 +46,7 @@
                 I'll try to keep this space updated—no promises. Check out my reels <a href="/reels.html">here</a>.
             </p>
         </div>
-        <div class="gallery-container" id="gallery"></div>
-    </div>
+    </section>
 
     <footer class="footer">
         <div class="social-icons">
@@ -70,9 +80,41 @@
 
     <script src="/script.js"></script>
     <script>
+        // Keep the hero sized correctly under the fixed header
+        function syncHeaderHeight() {
+            const header = document.querySelector('.header');
+            if (header) {
+                document.documentElement.style.setProperty('--header-h', header.offsetHeight + 'px');
+            }
+        }
+
         document.addEventListener("DOMContentLoaded", function () {
+            syncHeaderHeight();
             initGallery();
+
+            // Reveal the intro on scroll
+            const bio = document.querySelector('.bio');
+            if (bio && 'IntersectionObserver' in window) {
+                const observer = new IntersectionObserver((entries) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) bio.classList.add('revealed');
+                    });
+                }, { threshold: 0.25 });
+                observer.observe(bio);
+            } else if (bio) {
+                bio.classList.add('revealed');
+            }
         });
+
+        window.addEventListener('resize', syncHeaderHeight);
+
+        // Re-sync once the custom font has loaded (it changes header height)
+        if (document.fonts && document.fonts.ready) {
+            document.fonts.ready.then(function () {
+                syncHeaderHeight();
+                initGallery();
+            });
+        }
 
         let lastW = 0, lastH = 0;
 
@@ -125,8 +167,8 @@
 
             gallery.innerHTML = '';
 
-            // Define size variance for each node (80% to 110% of base size)
-            const sizeVariances = [0.85, 1.05, 0.95, 1.1, 0.9, 1.0, 0.88, 1.08, 0.92, 1.03, 0.96, 1.07];
+            // Define size variance for each node (70% to 130% of base size) - more noticeable
+            const sizeVariances = [0.78, 1.22, 0.92, 1.30, 0.85, 1.05, 0.72, 1.18, 0.88, 1.28, 0.95, 1.12];
 
             // Node positions using padded usable area
             const nodes = [
@@ -207,6 +249,33 @@
                 return (t1 > 0.05 && t1 < 0.95) || (t2 > 0.05 && t2 < 0.95);
             }
 
+            // Check if two line segments (p1-p2 and p3-p4) cross each other
+            function segmentsIntersect(p1, p2, p3, p4) {
+                function ccw(a, b, c) {
+                    return (c.y - a.y) * (b.x - a.x) - (b.y - a.y) * (c.x - a.x);
+                }
+                const d1 = ccw(p3, p4, p1);
+                const d2 = ccw(p3, p4, p2);
+                const d3 = ccw(p1, p2, p3);
+                const d4 = ccw(p1, p2, p4);
+                return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) &&
+                       ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+            }
+
+            // Does pair [a,b] cross any already-accepted connection (not sharing a node)?
+            function crossesExistingLine(a, b) {
+                const ca = getCenter(nodes[a]);
+                const cb = getCenter(nodes[b]);
+                for (const existing of connectionPairs) {
+                    const [e1, e2] = existing.split('-').map(Number);
+                    if (e1 === a || e1 === b || e2 === a || e2 === b) continue; // shares a node
+                    if (segmentsIntersect(ca, cb, getCenter(nodes[e1]), getCenter(nodes[e2]))) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
             // Build proximity-based connections
             const connectionPairs = [];
 
@@ -243,6 +312,9 @@
                     }
 
                     if (crossesNode) continue;
+
+                    // Skip if this line would cross an existing connection
+                    if (crossesExistingLine(i, d.j)) continue;
 
                     connectionPairs.push(pair);
                     connectedCount++;
