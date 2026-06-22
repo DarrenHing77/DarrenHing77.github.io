@@ -1,4 +1,8 @@
 /* Base styles */
+:root {
+    --header-h: 120px;
+}
+
 body {
     background-color: black;
     color: white;
@@ -16,9 +20,11 @@ body {
 /* Header */
 .header {
     display: flex;
-    justify-content: space-between;
+    flex-direction: column;
+    justify-content: center;
     align-items: center;
-    padding: 20px;
+    gap: 14px;
+    padding: 18px 20px;
     background: black;
     position: fixed;
     width: 100%;
@@ -27,18 +33,39 @@ body {
     box-sizing: border-box;
 }
 
+.header h1 {
+    margin: 0;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    font-size: 30px;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+}
+
 /* Navigation */
 .menu {
     display: flex;
-    gap: 20px;
+    gap: 24px;
     flex-wrap: wrap;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+}
+
+.menu a {
+    font-weight: 500;
+    letter-spacing: 1px;
 }
 
 .menu a {
     color: white;
     text-decoration: none;
-    font-size: 18px;
+    font-size: 15px;
     white-space: nowrap;
+    transition: color 0.3s ease;
+}
+
+.menu a:hover {
+    color: #1e90ff;
 }
 
 .dropdown {
@@ -66,37 +93,93 @@ body {
     text-decoration: none;
 }
 
-/* Container - Full height */
-.container {
-    display: flex;
-    justify-content: space-between;
-    margin-top: 80px; /* Space for fixed header */
-    padding: 0 20px 20px; 
+/* Hero - full-screen gallery under the fixed header */
+.hero {
+    position: relative;
+    height: 100vh;
+    padding-top: var(--header-h);
     box-sizing: border-box;
-    min-height: calc(100vh - 80px - 60px); /* Minimum height after header, accounting for footer */
+}
+
+/* Homepage Gallery - fills the hero, no divider line */
+.gallery-container {
+    position: relative;
+    height: 100%;
+    width: 100%;
+    overflow: hidden;
+    user-select: none;
+    border: none;
+    box-sizing: border-box;
+}
+
+/* Scroll cue at the bottom of the hero */
+.scroll-cue {
+    position: absolute;
+    bottom: 24px;
+    left: 50%;
+    transform: translateX(-50%);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    color: #1e90ff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 11px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0.7;
+    pointer-events: none;
+    animation: cueBounce 2s ease-in-out infinite;
+}
+
+@keyframes cueBounce {
+    0%, 100% { transform: translateX(-50%) translateY(0); }
+    50% { transform: translateX(-50%) translateY(8px); }
+}
+
+/* Intro reveal section (scrolls in below the hero) */
+.intro-reveal {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 70vh;
+    padding: 80px 24px;
+    box-sizing: border-box;
 }
 
 /* Bio Section */
 .bio {
-    width: 25%; /* Reduced to give gallery more space */
+    max-width: 720px;
+    width: 100%;
     padding: 20px;
     color: #1e90ff;
     box-sizing: border-box;
+    text-align: center;
+    opacity: 0;
+    transform: translateY(40px);
+    transition: opacity 0.9s ease, transform 0.9s ease;
+}
+
+.bio.revealed {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.bio h2 {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    letter-spacing: 2px;
+    line-height: 1.5;
+}
+
+.bio p {
+    color: #cfe6ff;
+    line-height: 1.8;
+    font-size: 17px;
 }
 
 .bio a {
     color: orange;
-}
-
-/* Homepage Gallery - Full height */
-.gallery-container {
-    flex: 1;
-    position: relative;
-    overflow: hidden;
-    user-select: none;
-    border: 1px solid rgba(255, 255, 255, 0.1);
-    box-sizing: border-box;
-    min-height: calc(100vh - 80px - 60px);
 }
 
 /* Molecular connection lines */
@@ -213,6 +296,10 @@ body {
     font-size: 32px;
     margin-bottom: 40px;
     text-align: center;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 700;
+    letter-spacing: 3px;
+    text-transform: uppercase;
 }
 
 /* Gallery Grid for Portfolio Pages with Randomized Sizes */
@@ -479,48 +566,37 @@ button[type="submit"]:hover {
 }
 
 @media (max-width: 768px) {
-    .container {
-        flex-direction: column;
-        min-height: auto;
-        height: auto;
-    }
-    
-    .bio {
-        position: relative;
-        width: 100%;
-        padding: 20px;
-        height: auto;
-    }
-    
-    .gallery-container {
-        position: relative;
-        width: 100%;
-        height: 100vh; /* Full viewport height for mobile */
-        margin-top: 20px;
-    }
-    
     .node {
         width: 150px; /* Smaller on mobile but still larger than original */
         height: 150px;
     }
-    
+
     .gallery-grid {
         grid-template-columns: repeat(6, 1fr);
     }
-    
+
     .technical-grid {
         grid-template-columns: repeat(6, 1fr);
     }
-    
+
     .header {
-        flex-direction: column;
-        padding: 10px;
+        padding: 12px 10px;
     }
-    
+
     .header h1 {
-        margin-bottom: 10px;
+        font-size: 22px;
+        letter-spacing: 2px;
     }
-    
+
+    .menu {
+        gap: 16px;
+    }
+
+    .intro-reveal {
+        min-height: 60vh;
+        padding: 60px 18px;
+    }
+
     .portfolio-container {
         margin-top: 150px;
         padding: 0 10px 20px;
