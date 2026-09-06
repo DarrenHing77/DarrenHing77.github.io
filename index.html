@@ -263,28 +263,120 @@
                 };
             }
 
-            // Draw simple molecular connection (straight line)
-            function drawMolecularConnection(fromNode, toNode) {
+            // Draw spray paint PCB connection (angled routing with spray paint effect)
+            function drawSprayPaintPCB(fromNode, toNode) {
                 const from = getEdgePoint(fromNode, toNode);
                 const to = getEdgePoint(toNode, fromNode);
+                const elements = [];
 
-                const line = document.createElement("div");
-                line.className = "molecular-line";
-                const length = Math.hypot(to.x - from.x, to.y - from.y);
-                const angle = Math.atan2(to.y - from.y, to.x - from.x);
-                line.style.left = `${from.x}px`;
-                line.style.top = `${from.y}px`;
-                line.style.width = `${length}px`;
-                line.style.transform = `rotate(${angle}rad)`;
-                gallery.appendChild(line);
+                const dx = to.x - from.x;
+                const dy = to.y - from.y;
+                const absDx = Math.abs(dx);
+                const absDy = Math.abs(dy);
 
-                return [line];
+                function createSprayLine(x1, y1, x2, y2) {
+                    const line = document.createElement("div");
+                    line.className = "spray-pcb-line";
+                    const length = Math.hypot(x2 - x1, y2 - y1);
+                    const angle = Math.atan2(y2 - y1, x2 - x1);
+                    line.style.cssText = `
+                        position: absolute;
+                        height: 4px;
+                        background: #1e90ff;
+                        z-index: 1;
+                        transition: all 0.3s ease;
+                        transform-origin: left center;
+                        opacity: 0.7;
+                        box-shadow: 0 0 8px rgba(30, 144, 255, 0.6), 0 0 15px rgba(30, 144, 255, 0.3);
+                        filter: blur(0.5px);
+                        pointer-events: none;
+                    `;
+                    line.style.left = `${x1}px`;
+                    line.style.top = `${y1 - 2}px`;
+                    line.style.width = `${length}px`;
+                    line.style.transform = `rotate(${angle}rad)`;
+                    gallery.appendChild(line);
+                    return line;
+                }
+
+                function createSprayCorner(x, y) {
+                    const corner = document.createElement("div");
+                    corner.className = "spray-pcb-corner";
+                    corner.style.cssText = `
+                        position: absolute;
+                        width: 10px;
+                        height: 10px;
+                        background: #1e90ff;
+                        border-radius: 50%;
+                        z-index: 2;
+                        transition: all 0.3s ease;
+                        opacity: 0.8;
+                        box-shadow: 0 0 10px rgba(30, 144, 255, 0.7), 0 0 20px rgba(30, 144, 255, 0.4);
+                        filter: blur(0.8px);
+                        pointer-events: none;
+                    `;
+                    corner.style.left = `${x - 5}px`;
+                    corner.style.top = `${y - 5}px`;
+                    gallery.appendChild(corner);
+                    return corner;
+                }
+
+                // 45-degree PCB-style routing
+                const diagonalLength = Math.min(absDx, absDy);
+                const straightLength = Math.abs(absDx - absDy);
+
+                if (diagonalLength < 12) {
+                    // Too short for proper 45° routing, draw direct line
+                    elements.push(createSprayLine(from.x, from.y, to.x, to.y));
+                } else if (absDx > absDy) {
+                    // More horizontal: H -> 45° -> H
+                    const dirX = dx > 0 ? 1 : -1;
+                    const dirY = dy > 0 ? 1 : -1;
+
+                    const h1Length = straightLength / 2;
+                    const midX1 = from.x + h1Length * dirX;
+                    if (h1Length > 6) {
+                        elements.push(createSprayLine(from.x, from.y, midX1, from.y));
+                        elements.push(createSprayCorner(midX1, from.y));
+                    }
+
+                    const diagEndX = midX1 + diagonalLength * dirX;
+                    const diagEndY = from.y + diagonalLength * dirY;
+                    elements.push(createSprayLine(h1Length > 6 ? midX1 : from.x, from.y, diagEndX, diagEndY));
+                    elements.push(createSprayCorner(diagEndX, diagEndY));
+
+                    if (h1Length > 6) {
+                        elements.push(createSprayLine(diagEndX, diagEndY, to.x, to.y));
+                    }
+                } else {
+                    // More vertical: V -> 45° -> V
+                    const dirX = dx > 0 ? 1 : -1;
+                    const dirY = dy > 0 ? 1 : -1;
+
+                    const v1Length = straightLength / 2;
+                    const midY1 = from.y + v1Length * dirY;
+                    if (v1Length > 6) {
+                        elements.push(createSprayLine(from.x, from.y, from.x, midY1));
+                        elements.push(createSprayCorner(from.x, midY1));
+                    }
+
+                    const diagEndX = from.x + diagonalLength * dirX;
+                    const diagEndY = midY1 + diagonalLength * dirY;
+                    elements.push(createSprayLine(from.x, v1Length > 6 ? midY1 : from.y, diagEndX, diagEndY));
+                    elements.push(createSprayCorner(diagEndX, diagEndY));
+
+                    if (v1Length > 6) {
+                        elements.push(createSprayLine(diagEndX, diagEndY, to.x, to.y));
+                    }
+                }
+
+                return elements;
             }
 
             // Draw all connections first (behind nodes)
             connectionPairs.forEach(pair => {
                 const [i, j] = pair.split('-').map(Number);
-                const elements = drawMolecularConnection(nodes[i], nodes[j]);
+                const elements = drawSprayPaintPCB(nodes[i], nodes[j]);
 
                 nodes[i].connectionElements = nodes[i].connectionElements || [];
                 nodes[j].connectionElements = nodes[j].connectionElements || [];
@@ -341,20 +433,29 @@
                 // Hover effects
                 nodeEl.addEventListener("mouseenter", () => {
                     nodeEl.style.transform = "scale(1.15)";
-                    nodeEl.style.boxShadow = "0 0 30px rgba(30, 144, 255, 0.8)";
+                    nodeEl.style.boxShadow = "0 0 35px rgba(30, 144, 255, 0.9), 0 0 60px rgba(30, 144, 255, 0.5)";
                     nodeEl.style.borderWidth = "4px";
                     nodeEl.style.zIndex = "20";
+                    nodeEl.style.filter = "brightness(1.2)";
 
                     if (node.connectionElements) {
                         node.connectionElements.forEach(el => {
-                            el.style.opacity = "1";
-                            el.style.height = "3px";
-                            el.style.boxShadow = "0 0 10px rgba(30, 144, 255, 0.8)";
+                            if (el.classList.contains('spray-pcb-line')) {
+                                el.style.opacity = "1";
+                                el.style.height = "5px";
+                                el.style.boxShadow = "0 0 15px rgba(30, 144, 255, 0.9), 0 0 25px rgba(30, 144, 255, 0.6)";
+                                el.style.filter = "blur(0.3px)";
+                            } else if (el.classList.contains('spray-pcb-corner')) {
+                                el.style.opacity = "1";
+                                el.style.boxShadow = "0 0 15px rgba(30, 144, 255, 0.9), 0 0 30px rgba(30, 144, 255, 0.6)";
+                                el.style.transform = "scale(1.3)";
+                                el.style.filter = "blur(0.5px)";
+                            }
                         });
                     }
                     if (node.connectedNodes) {
                         node.connectedNodes.forEach(n => {
-                            n.element.style.boxShadow = "0 0 20px rgba(30, 144, 255, 0.6)";
+                            n.element.style.boxShadow = "0 0 25px rgba(30, 144, 255, 0.7), 0 0 40px rgba(30, 144, 255, 0.4)";
                         });
                     }
                 });
@@ -364,12 +465,21 @@
                     nodeEl.style.boxShadow = "0 0 10px rgba(30, 144, 255, 0.3)";
                     nodeEl.style.borderWidth = "3px";
                     nodeEl.style.zIndex = "10";
+                    nodeEl.style.filter = "";
 
                     if (node.connectionElements) {
                         node.connectionElements.forEach(el => {
-                            el.style.opacity = "0.6";
-                            el.style.height = "2px";
-                            el.style.boxShadow = "";
+                            if (el.classList.contains('spray-pcb-line')) {
+                                el.style.opacity = "0.7";
+                                el.style.height = "4px";
+                                el.style.boxShadow = "0 0 8px rgba(30, 144, 255, 0.6), 0 0 15px rgba(30, 144, 255, 0.3)";
+                                el.style.filter = "blur(0.5px)";
+                            } else if (el.classList.contains('spray-pcb-corner')) {
+                                el.style.opacity = "0.8";
+                                el.style.boxShadow = "0 0 10px rgba(30, 144, 255, 0.7), 0 0 20px rgba(30, 144, 255, 0.4)";
+                                el.style.transform = "";
+                                el.style.filter = "blur(0.8px)";
+                            }
                         });
                     }
                     if (node.connectedNodes) {
